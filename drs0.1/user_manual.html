@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือการใช้งาน - Trash For Coin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">สารบัญ</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-pills flex-column">
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#overview">ภาพรวมระบบ</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#user-roles">บทบาทผู้ใช้งาน</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#getting-started">เริ่มต้นใช้งาน</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#features">คุณสมบัติหลัก</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#waste-types">ประเภทขยะ</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#deposit-system">ระบบมัดจำ</a>
+                                </li>
+                                <li class="nav-item mb-2">
+                                    <a class="nav-link" href="#technical">ข้อมูลเทคนิค</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-9">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="mb-0">
+                            <i class="bi bi-recycle me-2"></i>
+                            คู่มือการใช้งาน Trash For Coin
+                        </h1>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">ระบบจัดการขยะแลกเหรียญ เพื่อสิ่งแวดล้อมที่ยั่งยืน</p>
+                        <p class="text-muted">เวอร์ชัน 1.0 | อัปเดตล่าสุด: มกราคม 2025</p>
+                    </div>
+                </div>
+
+                <section id="overview" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>ภาพรวมระบบ</h2>
+                        </div>
+                        <div class="card-body">
+                            <p>Trash For Coin เป็นระบบมัดจำบรรจุภัณฑ์ขยะที่พัฒนาขึ้นเพื่อส่งเสริมการรีไซเคิลและลดขยะในชุมชน โดยใช้กลไกการมัดจำ 1 บาทต่อบรรจุภัณฑ์ 1 ชิ้น</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>วัตถุประสงค์หลัก</h4>
+                                    <ul>
+                                        <li>ลดขยะที่ไปหลุมฝังกลบ</li>
+                                        <li>เพิ่มอัตราการรีไซเคิล</li>
+                                        <li>สร้างแรงจูงใจในการคัดแยกขยะ</li>
+                                        <li>ลดต้นทุนการจัดการขยะ</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>ผลประโยชน์</h4>
+                                    <ul>
+                                        <li>ได้เงินคืนจากการทิ้งขยะ</li>
+                                        <li>ช่วยรักษาสิ่งแวดล้อม</li>
+                                        <li>ลดการใช้ทรัพยากรธรรมชาติ</li>
+                                        <li>เสริมสร้างจิตสำนึกสิ่งแวดล้อม</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="user-roles" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>บทบาทผู้ใช้งาน</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-danger mb-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5><i class="bi bi-shield-fill me-2"></i>Root Admin</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>สิทธิ์สูงสุดในระบบ สามารถ:</p>
+                                            <ul>
+                                                <li>จัดการผู้ใช้งานทุกระดับ</li>
+                                                <li>เข้าถึงข้อมูลทั้งหมด</li>
+                                                <li>ตั้งค่าระบบ</li>
+                                                <li>ดูรายงานทั้งหมด</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h5><i class="bi bi-person-gear me-2"></i>Administrator</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>ผู้ดูแลระบบ สามารถ:</p>
+                                            <ul>
+                                                <li>จัดการผู้ใช้งาน (ยกเว้น Root Admin)</li>
+                                                <li>จัดการสินค้าและหมวดหมู่</li>
+                                                <li>ดูรายงานทั้งหมด</li>
+                                                <li>จัดการคำสั่งซื้อ</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-info mb-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h5><i class="bi bi-person-check me-2"></i>Moderator</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>ผู้ดูแลเนื้อหา สามารถ:</p>
+                                            <ul>
+                                                <li>จัดการสินค้าและหมวดหมู่</li>
+                                                <li>จัดการคำสั่งซื้อ</li>
+                                                <li>ดูรายงานส่วนใหญ่</li>
+                                                <li>ส่งออกข้อมูล</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-primary mb-3">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5><i class="bi bi-person me-2"></i>Member</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>สมาชิกทั่วไป สามารถ:</p>
+                                            <ul>
+                                                <li>ดูและจัดการคำสั่งซื้อของตนเอง</li>
+                                                <li>ดูข้อมูลสินค้า</li>
+                                                <li>ส่งออกรายงานส่วนตัว</li>
+                                                <li>อัปเดตโปรไฟล์</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-secondary mb-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h5><i class="bi bi-eye me-2"></i>Viewer</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>ผู้ดูข้อมูล สามารถ:</p>
+                                            <ul>
+                                                <li>ดูข้อมูลทั่วไป</li>
+                                                <li>ดูสถิติระบบ</li>
+                                                <li>ดูรายการสินค้า</li>
+                                                <li>ไม่สามารถแก้ไขข้อมูล</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="getting-started" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>เริ่มต้นใช้งาน</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>1. การสมัครสมาชิก</h4>
+                                    <ol>
+                                        <li>เข้าสู่หน้าเว็บไซต์</li>
+                                        <li>คลิกปุ่ม "สมัครสมาชิก"</li>
+                                        <li>กรอกข้อมูล: ชื่อ, นามสกุล, อีเมล, รหัสผ่าน</li>
+                                        <li>คลิก "สมัครสมาชิก"</li>
+                                        <li>ระบบจะกำหนดบทบาทเป็น "Member" โดยอัตโนมัติ</li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>2. การเข้าสู่ระบบ</h4>
+                                    <ol>
+                                        <li>คลิกปุ่ม "เข้าสู่ระบบ"</li>
+                                        <li>กรอกอีเมลและรหัสผ่าน</li>
+                                        <li>คลิก "เข้าสู่ระบบ"</li>
+                                        <li>ระบบจะพาเข้าสู่หน้าแรก</li>
+                                        <li>ดูบทบาทของคุณที่มุมขวาบน</li>
+                                    </ol>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <h5><i class="bi bi-info-circle me-2"></i>หมายเหตุสำคัญ</h5>
+                                <p>สำหรับการตั้งค่าครั้งแรก ผู้ดูแลระบบต้องรันคำสั่ง SQL ต่อไปนี้:</p>
+                                <code>
+                                    ALTER TABLE tbl_users ADD COLUMN role VARCHAR(50) DEFAULT 'member';<br>
+                                    UPDATE tbl_users SET role = 'root_admin' WHERE email = 'your_admin_email@example.com';
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="features" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>คุณสมบัติหลัก</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-primary mb-3">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5><i class="bi bi-tags me-2"></i>จัดการหมวดหมู่</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>เพิ่ม/แก้ไข/ลบหมวดหมู่</li>
+                                                <li>ค้นหาหมวดหมู่</li>
+                                                <li>จัดการ 5 ประเภทหลัก</li>
+                                                <li>ระบบ validation</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success mb-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h5><i class="bi bi-box me-2"></i>จัดการสินค้า</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>เพิ่ม/แก้ไข/ลบสินค้า</li>
+                                                <li>ติดตามสต็อก</li>
+                                                <li>กำหนดราคาและหมวดหมู่</li>
+                                                <li>ส่งออกข้อมูล CSV</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h5><i class="bi bi-cart-check me-2"></i>จัดการคำสั่งซื้อ</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul>
+                                                <li>สร้างคำสั่งซื้อ</li>
+                                                <li>อัปเดตสต็อกอัตโนมัติ</li>
+                                                <li>ระบบมัดจำ 1 บาท/ชิ้น</li>
+                                                <li>ส่งออกรายงาน PDF</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="waste-types" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>ประเภทขยะที่รองรับ</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-primary mb-3">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5><i class="bi bi-cup-straw me-2"></i>PET</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>ภาชนะพลาสติกประเภท PET</strong></p>
+                                            <ul>
+                                                <li>ขวดน้ำพลาสติก</li>
+                                                <li>ขวดน้ำอัดลม</li>
+                                                <li>ขวดน้ำผลไม้</li>
+                                                <li>สามารถนำไปแปรรูปเป็นเม็ดพลาสติก</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success mb-3">
+                                        <div class="card-header bg-success text-white">
+                                            <h5><i class="bi bi-cup me-2"></i>อลูมิเนียม</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>ภาชนะอลูมิเนียม</strong></p>
+                                            <ul>
+                                                <li>กระป๋องเครื่องดื่ม</li>
+                                                <li>กระป๋องเบียร์</li>
+                                                <li>ฝาขวดอลูมิเนียม</li>
+                                                <li>สามารถหลอมและขึ้นรูปใหม่ได้</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info mb-3">
+                                        <div class="card-header bg-info text-white">
+                                            <h5><i class="bi bi-cup-hot me-2"></i>แก้ว</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>ภาชนะแก้ว</strong></p>
+                                            <ul>
+                                                <li>ขวดแก้วเครื่องดื่ม</li>
+                                                <li>ขวดแก้วยา</li>
+                                                <li>ขวดแก้วปรุงรส</li>
+                                                <li>วงจรการรีไซเคิลที่ยั่งยืน</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-dark">
+                                            <h5><i class="bi bi-fire me-2"></i>วัสดุสำหรับเผา</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>ขยะที่เหมาะสำหรับเผาเพื่อผลิตพลังงาน</strong></p>
+                                            <ul>
+                                                <li>พลาสติกปนเปื้อนน้ำมัน</li>
+                                                <li>ถุงพลาสติกหลายชั้น</li>
+                                                <li>โฟมบรรจุภัณฑ์</li>
+                                                <li>กระดาษเคลือบพลาสติก</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-danger mb-3">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5><i class="bi bi-exclamation-triangle me-2"></i>ขยะปนเปื้อน</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>ขยะที่ต้องจัดการพิเศษ</strong></p>
+                                            <ul>
+                                                <li>บรรจุภัณฑ์เปียก</li>
+                                                <li>ขยะปนเปื้อนของเหลว</li>
+                                                <li>ขยะปนเปื้อนน้ำมัน</li>
+                                                <li>ต้องมีการจัดการอย่างเหมาะสม</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="deposit-system" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>ระบบมัดจำ</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4>การทำงานของระบบมัดจำ</h4>
+                                    <ol>
+                                        <li><strong>ซื้อสินค้า:</strong> ร้านค้าจะเก็บเงินมัดจำ 1 บาทต่อชิ้น</li>
+                                        <li><strong>ได้รับใบเสร็จ:</strong> พร้อมรหัส barcode สำหรับการคืนขยะ</li>
+                                        <li><strong>ใช้สินค้า:</strong> และเก็บบรรจุภัณฑ์ไว้</li>
+                                        <li><strong>คัดแยกขยะ:</strong> ตามประเภท 5 ประเภท</li>
+                                        <li><strong>นำไปทิ้ง:</strong> ที่ตู้รับขยะอัตโนมัติ</li>
+                                        <li><strong>สแกน barcode:</strong> จากใบเสร็จ</li>
+                                        <li><strong>ทิ้งขยะ:</strong> ในช่องที่ถูกต้อง</li>
+                                        <li><strong>รับเงินคืน:</strong> ทันที 1 บาทต่อชิ้น</li>
+                                    </ol>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h5>ข้อมูลสถิติ</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>อัตราคืนขยะ:</strong> 98% (เยอรมนี)</p>
+                                            <p><strong>เงินมัดจำ:</strong> 1 บาทต่อชิ้น</p>
+                                            <p><strong>ประเภทขยะ:</strong> 5 ประเภท</p>
+                                            <p><strong>ผลประโยชน์:</strong> ลดขยะในหลุมฝังกลบ</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="technical" class="mb-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>ข้อมูลเทคนิคและการติดตั้ง</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>ความต้องการของระบบ</h4>
+                                    <ul>
+                                        <li><strong>เว็บเซิร์ฟเวอร์:</strong> Flask (Python)</li>
+                                        <li><strong>ฐานข้อมูล:</strong> MySQL</li>
+                                        <li><strong>Frontend:</strong> HTML, Bootstrap 5</li>
+                                        <li><strong>ไลบรารี:</strong> mysql-connector-python, xhtml2pdf</li>
+                                    </ul>
+                                    
+                                    <h4>โครงสร้างฐานข้อมูล</h4>
+                                    <ul>
+                                        <li><strong>tbl_users:</strong> ข้อมูลผู้ใช้และบทบาท</li>
+                                        <li><strong>tbl_category:</strong> หมวดหมู่ขยะ</li>
+                                        <li><strong>tbl_products:</strong> สินค้าและบรรจุภัณฑ์</li>
+                                        <li><strong>tbl_order:</strong> คำสั่งซื้อและการทิ้งขยะ</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h4>อุปกรณ์ฮาร์ดแวร์</h4>
+                                    <ul>
+                                        <li>Raspberry Pi 4 (1GB)</li>
+                                        <li>Automatic Scanner</li>
+                                        <li>เครื่องพิมพ์ใบเสร็จ 58MM</li>
+                                        <li>LCD Display Module</li>
+                                        <li>เครื่องจ่ายเหรียญ 24V</li>
+                                        <li>หม้อแปลงไฟฟ้า 300W</li>
+                                        <li>เซ็นเซอร์และ LED</li>
+                                    </ul>
+                                    
+                                    <h4>งบประมาณ</h4>
+                                    <p><strong>ต้นทุนรวม:</strong> 6,023 บาท</p>
+                                    <p><strong>ผลตอบแทน:</strong> ลดต้นทุนจัดการขยะ</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

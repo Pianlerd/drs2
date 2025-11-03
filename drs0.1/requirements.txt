@@ -1,0 +1,5 @@
+Flask==2.3.3
+mysql-connector-python==8.1.0
+xhtml2pdf==0.2.11
+pip install weasyprint
+pip install Pillow

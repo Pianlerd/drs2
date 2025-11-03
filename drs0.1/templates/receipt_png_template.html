@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบเสร็จรับเงิน</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'THSarabunNew';
+            font-style: normal;
+            font-weight: normal;
+            src: url("https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2") format('woff2');
+        }
+        body {
+            font-family: 'THSarabunNew', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center">
+
+    <div id="receipt-container" class="bg-white shadow-lg p-8 m-4 rounded-lg w-full max-w-sm">
+        <div class="flex justify-center mb-4">
+            <img src="https://barcode.tec-it.com/barcode.ashx?data={{ barcode_id }}" alt="Barcode" class="w-full h-auto max-w-xs">
+        </div>
+
+        <p class="text-left text-sm text-gray-500 mb-6">รหัสคำสั่งซื้อ: {{ current_order_id }}</p>
+
+        <h2 class="text-xl font-bold text-left mb-4">รายการสินค้า</h2>
+
+<!--         <div class="border-t border-gray-300 pt-4">
+            {% for item in orders %}
+                <div class="flex flex-col mb-2">
+                    <div class="flex justify-between items-start">
+                        <p class="text-left flex-grow">
+                            {{ item.quantity }} {{ item.products_name }}
+                        </p>
+                        <span class="ml-4 font-semibold">
+                            {{ (item.quantity | float) * (item.price | float) | round(2) }} บ.
+                        </span>
+                    </div>
+                    {% if item.quantity > 1 %}
+                        <p class="text-left text-sm text-gray-600 pl-4">
+                            ({{ item.price | float | round(2) }} บ. / ชิ้น)
+                        </p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div> 
+    -->
+
+
+        
+        <div class="border-t border-gray-300 pt-4">
+            {% for item in orders %}
+            <div class="flex justify-between">
+                    <div class="items-start ">
+                                {{ item.quantity }} {{ item.products_name }}
+                    </div>
+                            
+                    <div class="ml-4 text-right">
+            
+                        {% if item.quantity > 1 %}
+                            @{{ item.price | float | round(2)     }}    
+                        {% endif %}
+
+                        &nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;฿{{ (item.quantity | float) * (item.price | float) | round(2)}}
+                    </div>
+            </div>
+            {% endfor %}
+        </div>
+
+
+        <div class="border-t border-gray-300 pt-4 mt-4 flex justify-between">
+            <p class="text-xl font-bold">
+                Total ({{ total_quantity }})
+            </p>
+            <span class="ml-4 font-bold">
+                {{ total_price | float | round(2) }} บ.
+            </span>
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="https://barcode.tec-it.com/barcode.ashx?data={{ barcode_id }}" download="barcode_{{ current_order_id }}.png" class="text-blue-600 hover:underline">ดาวน์โหลด Barcode ที่นี่</a>
+            <div class="mt-4 flex justify-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://barcode.tec-it.com/barcode.ashx?data={{ barcode_id }}" alt="QR Code" class="w-24 h-24">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const receiptContainer = document.getElementById('receipt-container');
+
+            if (receiptContainer) {
+                receiptContainer.dataset.orderId = '{{ current_order_id }}';
+                html2canvas(receiptContainer, {
+                    scale: 3,
+                    useCORS: true
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `receipt_order_${receiptContainer.dataset.orderId}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }).catch(error => {
+                    console.error('Error generating PNG:', error);
+                    alert('เกิดข้อผิดพลาดในการสร้างไฟล์ PNG');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

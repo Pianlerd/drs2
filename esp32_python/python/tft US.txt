@@ -1,0 +1,31 @@
+#define USER_SETUP_INFO "User_Setup"
+
+// === Driver Selection ===
+#define ILI9488_DRIVER
+
+// === Pin assignments ===
+#define TFT_MISO  19      // ไม่ใช้ MISO สำหรับจอ TFT SPI
+#define TFT_MOSI  23      // Master-Out
+#define TFT_SCLK  18      // Clock
+
+#define TFT_CS    5       // Chip select
+#define TFT_DC    21       // Data/Command
+#define TFT_RST   22       // Reset (หรือ -1 ถ้าต่อกับ 3.3V โดยตรง)
+
+// === Font and GFX Options ===
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define LOAD_FONT6
+#define LOAD_FONT7
+#define LOAD_FONT8
+//#define LOAD_FONT8N
+#define LOAD_GFXFF
+#define SMOOTH_FONT
+
+// === SPI Speeds ===
+#define SPI_FREQUENCY 4000000
+
+#define SPI_READ_FREQUENCY  16000000
+
+#define SPI_TOUCH_FREQUENCY 2500000

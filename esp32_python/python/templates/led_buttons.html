@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ควบคุม LED ESP32</title>
+    <style>
+        body { font-family: sans-serif; }
+        .led-block {
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ควบคุม LED บน ESP32</h1>
+    {% for i in range(1, 6) %}
+        <div class="led-block">
+            <form method="POST" action="/led/{{ i }}/on" style="display:inline;">
+                <button type="submit" style="background-color: lightgreen;">เปิด LED {{ i }}</button>
+            </form>
+            <form method="POST" action="/led/{{ i }}/off" style="display:inline;">
+                <button type="submit" style="background-color: lightcoral;">ปิด LED {{ i }}</button>
+            </form>
+        </div>
+    {% endfor %}
+</body>
+</html>

@@ -1,0 +1,237 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h> // Include the ESP32 Servo library
+#include <HTTPClient.h> // เพิ่มไลบรารีสำหรับ HTTPClient
+
+// Replace with your network credentials
+const char* ssid = "Galaxy Note10+306b";
+const char* password = ""; // ใส่รหัสผ่าน WiFi ของคุณที่นี่
+
+// Define the GPIO pins connected to the servo motors
+// Make sure these match the IDs you intend to use in your web application
+// Choose GPIO pins that support PWM (e.g., 2, 4, 12-19, 21-23, 25-27, 32-33)
+const int servoPins[] = {12, 13, 14, 26, 27}; 
+const int NUM_SERVOS = sizeof(servoPins) / sizeof(servoPins[0]);
+
+// Create an array of Servo objects
+Servo myServos[NUM_SERVOS];
+
+// Variables for smooth servo movement (non-blocking)
+// Each servo needs its own set of these variables
+int currentServoAngles[NUM_SERVOS];     // Current actual angle of each servo
+int targetServoAngles[NUM_SERVOS];      // Target angle for each servo
+bool isServoMoving[NUM_SERVOS];         // Flag to indicate if a servo is currently moving
+unsigned long servoMoveStartTime[NUM_SERVOS]; // Millis() when the movement started
+// Adjust this value to control the speed of the servo movement.
+// A smaller value means faster movement, a larger value means slower movement.
+const unsigned long SERVO_MOVE_DURATION = 5000; // 5 seconds for movement (in milliseconds)
+
+WebServer server(80);
+
+// กำหนดขาเซ็นเซอร์ IR และตัวแปรสำหรับการนับ
+#define IR_SENSOR_PIN 32 // กำหนดขาเซ็นเซอร์ IR (สามารถเปลี่ยนเป็นขาอื่นได้ เช่น 33, 34, 35, 25)
+int count = 0;
+bool objectDetected = false; // ใช้เพื่อตรวจจับขอบขาขึ้น/ขาลงของเซ็นเซอร์
+
+// IP ของ Flask Server - ตรวจสอบให้แน่ใจว่าตรงกับ IP ของ Flask server ของคุณ
+const char* flask_ip = "192.168.118.23";  // ← ต้องตรงกับที่ Flask ใช้จริง
+
+
+// Function prototypes
+void handleRoot();
+void handleServo(int servoIndex, int state);
+void handleNotFound();
+void updateServoPositions(); // New function to handle smooth movement in loop()
+void sendResetCommandToFlask(); // เพิ่ม Function Prototype สำหรับส่งคำสั่งรีเซ็ต
+
+void setup() {
+  Serial.begin(115200);
+
+  // Allocate PWM timers for ESP32Servo library
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  // Initialize servo motors and set initial position to 0 degrees
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    myServos[i].attach(servoPins[i], 500, 2500); 
+    myServos[i].write(0); // Set initial position to 0 degrees
+    currentServoAngles[i] = 0;
+    targetServoAngles[i] = 0;
+    isServoMoving[i] = false; // Initially no servo is moving
+    Serial.print("Servo on GPIO ");
+    Serial.print(servoPins[i]);
+    Serial.println(" initialized to 0 degrees.");
+  }
+
+  // กำหนดขาเซ็นเซอร์ IR เป็น INPUT
+  pinMode(IR_SENSOR_PIN, INPUT); 
+
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 20) {
+    delay(500);
+    Serial.print(".");
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    // Setup server routes for each servo
+    for (int i = 0; i < NUM_SERVOS; i++) {
+      String pathOn = "/servo" + String(servoPins[i]) + "/on";
+      String pathOff = "/servo" + String(servoPins[i]) + "/off";
+
+      server.on(pathOn.c_str(), HTTP_GET, [=]() { handleServo(i, HIGH); });
+      server.on(pathOff.c_str(), HTTP_GET, [=]() { handleServo(i, LOW); });
+    }
+
+    server.on("/", HTTP_GET, handleRoot); // Handle root path
+    server.onNotFound(handleNotFound); // Handle unknown requests
+    server.begin();
+    Serial.println("HTTP server started.");
+  } else {
+    Serial.println("\nFailed to connect to WiFi. Please check credentials and try again.");
+  }
+}
+
+void loop() {
+  server.handleClient(); // Handle incoming HTTP requests
+  updateServoPositions(); // Continuously update servo positions for smooth movement
+
+  // ตรวจสอบค่าจากเซ็นเซอร์ IR
+  int sensorValue = digitalRead(IR_SENSOR_PIN); 
+
+  // ตรวจจับการเปลี่ยนแปลงจาก LOW (วัตถุอยู่) เป็น HIGH (วัตถุไม่อยู่) หรือกลับกัน
+  // และเพิ่มค่า count เมื่อวัตถุผ่านไป (ตรวจจับขอบขาขึ้นของสัญญาณ)
+  if (sensorValue == LOW && !objectDetected) { // ถ้าเซ็นเซอร์ตรวจจับวัตถุได้ (LOW) และยังไม่เคยตรวจจับมาก่อนในรอบนี้
+    count++; // เพิ่มค่า count
+    objectDetected = true; // ตั้งค่าสถานะว่าตรวจจับวัตถุแล้ว
+    Serial.print("Count: ");
+    Serial.println(count);
+    Serial.println("Sensor triggered! Sending reset command to Flask.");
+    sendResetCommandToFlask(); // ส่งคำสั่งรีเซ็ตไป Flask
+  } else if (sensorValue == HIGH && objectDetected) { // ถ้าเซ็นเซอร์ไม่ตรวจจับวัตถุ (HIGH) และก่อนหน้านี้เคยตรวจจับวัตถุ
+    objectDetected = false; // รีเซ็ตสถานะเพื่อรอการตรวจจับวัตถุครั้งต่อไป
+  }
+}
+
+// Handles the root path request, providing a simple status page
+void handleRoot() {
+  String html = "<html><body><h1>ESP32 Servo Control</h1>";
+  html += "<p>Connected to WiFi: " + String(ssid) + "</p>";
+  html += "<p>IP Address: " + WiFi.localIP().toString() + "</p>";
+  html += "<h2>Control Servos:</h2><ul>";
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    html += "<li>Servo on GPIO " + String(servoPins[i]) + ": ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/on'>ON (60 deg)</a> | "; 
+    html += "<a href='/servo" + String(servoPins[i]) + "/off'>OFF (0 deg)</a>";
+    html += "</li>";
+  }
+  html += "</ul></body></html>";
+  server.send(200, "text/html", html);
+}
+
+// Handles servo control requests
+// servoIndex: The index of the servo in the myServos array
+// state: HIGH for ON (60 degrees), LOW for OFF (0 degrees)
+void handleServo(int servoIndex, int state) {
+  int targetAngle;
+  String stateStr;
+
+  if (state == HIGH) {
+    targetAngle = 60; // Rotate to 60 degrees when "ON"
+    stateStr = "ON (60 degrees)"; 
+  } else {
+    targetAngle = 0;  // Rotate back to 0 degrees when "OFF"
+    stateStr = "OFF (0 degrees)";
+  }
+
+  // Set up the movement parameters for the specified servo
+  targetServoAngles[servoIndex] = targetAngle;
+  servoMoveStartTime[servoIndex] = millis(); // Record start time
+  isServoMoving[servoIndex] = true; // Set flag to true to start movement
+
+  Serial.print("Servo on GPIO ");
+  Serial.print(servoPins[servoIndex]);
+  Serial.print(" command: ");
+  Serial.println(stateStr);
+  server.send(200, "text/plain", "Servo " + String(servoPins[servoIndex]) + " command: " + stateStr);
+}
+
+// Continuously updates the position of moving servos
+void updateServoPositions() {
+  unsigned long currentTime = millis();
+
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (isServoMoving[i]) {
+      unsigned long elapsedTime = currentTime - servoMoveStartTime[i];
+
+      if (elapsedTime < SERVO_MOVE_DURATION) {
+        float progress = (float)elapsedTime / SERVO_MOVE_DURATION;
+        int startAngle = currentServoAngles[i]; 
+        int newAngle = startAngle + (int)((targetServoAngles[i] - startAngle) * progress);
+        
+        myServos[i].write(newAngle);
+        currentServoAngles[i] = newAngle; 
+      } else {
+        myServos[i].write(targetServoAngles[i]);
+        currentServoAngles[i] = targetServoAngles[i]; 
+        isServoMoving[i] = false; 
+        Serial.print("Servo on GPIO ");
+        Serial.print(servoPins[i]);
+        Serial.print(" reached target angle: ");
+        Serial.println(targetServoAngles[i]);
+      }
+    }
+  }
+}
+
+// Handles requests for unknown paths
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  Serial.println(message); // Also print to serial for debugging
+}
+
+// ฟังก์ชันสำหรับส่งคำสั่งรีเซ็ตไปยัง Flask server
+void sendResetCommandToFlask() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    // เรียก endpoint /sensor_reset ที่เราสร้างไว้ใน Flask
+    String serverPath = "http://" + String(flask_ip) + ":5000/sensor_reset";
+
+
+    http.begin(serverPath.c_str());
+    int httpResponseCode = http.GET(); // ส่ง HTTP GET request
+
+    if (httpResponseCode > 0) {
+      Serial.printf("[HTTP] GET... code: %d\n", httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected, cannot send reset command.");
+  }
+}

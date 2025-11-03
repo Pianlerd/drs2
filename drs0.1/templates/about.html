@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}เกี่ยวกับเรา - Trash For Coin | ระบบมัดจำบรรจุภัณฑ์ขยะเพื่อสิ่งแวดล้อมที่ยั่งยืน{% endblock %}
+
+{% block content %}
+<!-- Enhanced Hero Section -->
+<section class="hero-section bg-primary text-white py-5 position-relative overflow-hidden">
+    <div class="hero-background position-absolute w-100 h-100" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); opacity: 0.95;"></div>
+   <div class="hero-pattern position-absolute w-100 h-100" style="background-image: url('data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Cdefs%3E%3Cpattern id%3D%22grid%22 width%3D%2210%22 height%3D%2210%22 patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath d%3D%22M 10 0 L 0 0 0 10%22 fill%3D%22none%22 stroke%3D%22rgba(255%2C255%2C255%2C0.1)%22 stroke-width%3D%221%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect width%3D%22100%22 height%3D%22100%22 fill%3D%22url(%23grid)%22%2F%3E%3C%2Fsvg%3E');"></div>
+   
+    <div class="container position-relative">
+        <div class="row align-items-center py-5">
+            <div class="col-lg-8">
+                <div class="hero-content slide-up">
+                    <h1 class="display-3 fw-bold mb-4">เกี่ยวกับ Trash For Coin</h1>
+                    <p class="lead mb-4 text-white-50">
+                        ระบบมัดจำบรรจุภัณฑ์ขยะเพื่อการจัดการขยะที่ยั่งยืน<br>
+                        ส่งเสริมการรีไซเคิลและลดขยะในชุมชนด้วยเทคโนโลยีที่ทันสมัย
+                    </p>
+                    <div class="hero-stats row g-3">
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">2025</h3>
+                                <small class="text-white-50">ปีที่ก่อตั้ง</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">5</h3>
+                                <small class="text-white-50">ประเภทขยะ</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">100%</h3>
+                                <small class="text-white-50">เพื่อสิ่งแวดล้อม</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="hero-visual text-center slide-up" style="animation-delay: 0.2s;">
+                    <div class="floating-elements position-relative">
+                        <div class="main-icon bg-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg" 
+                             style="width: 200px; height: 200px; animation: float 3s ease-in-out infinite;">
+                            <i class="bi bi-recycle text-success" style="font-size: 5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission & Vision Section -->
+<section class="py-5">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="mission-card card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-5">
+                            <h2 class="display-5 fw-bold mb-4">ภารกิจของเรา</h2>
+                            <div class="mission-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="bi bi-bullseye text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                        </div>
+                        
+                        <p class="lead text-muted mb-4 text-center">
+                            โครงการ Trash For Coin ถูกพัฒนาขึ้นจากปัญหาการจัดการขยะมูลฝอยชุมชนที่เป็นความท้าทายสำคัญระดับโลก 
+                            ด้วยปริมาณขยะที่เพิ่มขึ้นอย่างต่อเนื่องจากการขยายตัวของเมือง การเติบโตของประชากร และพฤติกรรมการบริโภคที่เปลี่ยนแปลงไป
+                        </p>
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="objective-card h-100">
+                                    <div class="card-header bg-primary text-white">
+                                        <h4 class="fw-bold mb-0">
+                                            <i class="bi bi-target me-2"></i>วัตถุประสงค์
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                                <span>พัฒนาระบบมัดจำบรรจุภัณฑ์ที่รองรับการจัดการขยะได้อย่างครอบคลุม</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                                <span>ลดต้นทุนการบริหารและการจัดการขยะต้นทาง</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                                <span>เพิ่มอัตราการนำบรรจุภัณฑ์กลับเข้าสู่กระบวนการรีไซเคิล</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-start">
+                                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                                <span>สร้างแรงจูงใจเชิงบวกในการจัดการขยะอย่างถูกวิธี</span>
+                                            </li>
+                                            <li class="d-flex align-items-start">
+                                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                                <span>ส่งเสริมจิตสำนึกด้านสิ่งแวดล้อมในชุมชน</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="waste-types-card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h4 class="fw-bold mb-0">
+                                            <i class="bi bi-recycle me-2"></i>ประเภทขยะที่รองรับ
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-unstyled">
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <div class="waste-icon bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-cup-straw text-primary"></i>
+                                                </div>
+                                                <span>ภาชนะพลาสติกประเภท PET</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <div class="waste-icon bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-cup text-success"></i>
+                                                </div>
+                                                <span>ภาชนะอลูมิเนียม</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <div class="waste-icon bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-cup-hot text-info"></i>
+                                                </div>
+                                                <span>ภาชนะแก้วที่สามารถหลอมได้</span>
+                                            </li>
+                                            <li class="mb-3 d-flex align-items-center">
+                                                <div class="waste-icon bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-fire text-warning"></i>
+                                                </div>
+                                                <span>ขยะสำหรับเผาเพื่อผลิตพลังงาน</span>
+                                            </li>
+                                            <li class="d-flex align-items-center">
+                                                <div class="waste-icon bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-exclamation-triangle text-danger"></i>
+                                                </div>
+                                                <span>ขยะปนเปื้อนที่ต้องจัดการพิเศษ</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology & Innovation Section -->
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">เทคโนโลยีและนวัตกรรม</h2>
+                <p class="lead text-muted">
+                    ระบบที่พัฒนาด้วยเทคโนโลยีล้ำสมัย เพื่อประสิทธิภาพสูงสุดในการจัดการขยะ
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-qr-code text-primary fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">ระบบ QR Code</h5>
+                        <p class="text-muted">
+                            ใช้เทคโนโลยี QR Code ในการติดตามและจัดการบรรจุภัณฑ์แต่ละชิ้น
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-cloud text-success fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Cloud Computing</h5>
+                        <p class="text-muted">
+                            ระบบคลาวด์ที่รองรับการใช้งานจำนวนมาก พร้อมความปลอดภัยสูง
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-graph-up text-info fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Data Analytics</h5>
+                        <p class="text-muted">
+                            วิเคราะห์ข้อมูลการใช้งานเพื่อปรับปรุงระบบและเพิ่มประสิทธิภาพ
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-shield-check text-warning fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Security System</h5>
+                        <p class="text-muted">
+                            ระบบความปลอดภัยขั้นสูง ป้องกันการฉ้อโกงและรักษาข้อมูลผู้ใช้
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-phone text-danger fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Mobile Responsive</h5>
+                        <p class="text-muted">
+                            รองรับการใช้งานบนอุปกรณ์มือถือทุกประเภท ใช้งานได้ทุกที่ทุกเวลา
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="tech-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="tech-icon bg-secondary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-lightning text-secondary fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">Real-time Processing</h5>
+                        <p class="text-muted">
+                            ประมวลผลข้อมูลแบบเรียลไทม์ ให้ผลลัพธ์ที่รวดเร็วและแม่นยำ
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-5">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">ทีมพัฒนา</h2>
+                <p class="lead text-muted">
+                    ทีมงานมืออาชีพที่มีประสบการณ์และความเชี่ยวชาญในด้านเทคโนโลยีและสิ่งแวดล้อม
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card card border-0 shadow-lg h-100">
+                    <div class="card-body text-center p-5">
+                        <div class="team-avatar bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 120px; height: 120px;">
+                            <i class="bi bi-person-badge text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">นายเพียรเลิศ พริ้งเพราะ</h4>
+                        <p class="text-primary fw-semibold mb-3">ผู้จัดทำโครงการ</p>
+                        <p class="text-muted mb-4">
+                            นักพัฒนาซอฟต์แวร์ที่มีประสบการณ์ในการพัฒนาระบบจัดการสิ่งแวดล้อม 
+                            และมีความเชี่ยวชาญด้านเทคโนโลยีสีเขียว
+                        </p>
+                        <div class="team-skills">
+                            <span class="badge bg-primary me-2 mb-2">Full-Stack Development</span>
+                            <span class="badge bg-success me-2 mb-2">Environmental Tech</span>
+                            <span class="badge bg-info me-2 mb-2">Project Management</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="team-card card border-0 shadow-lg h-100">
+                    <div class="card-body text-center p-5">
+                        <div class="team-avatar bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 120px; height: 120px;">
+                            <i class="bi bi-person-badge text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">นายปพณ คุปตะพันธ์</h4>
+                        <p class="text-success fw-semibold mb-3">ผู้จัดทำโครงการ</p>
+                        <p class="text-muted mb-4">
+                            ผู้เชี่ยวชาญด้านการจัดการขยะและสิ่งแวดล้อม มีประสบการณ์ในการออกแบบ
+                            ระบบจัดการทรัพยากรอย่างยั่งยืน
+                        </p>
+                        <div class="team-skills">
+                            <span class="badge bg-success me-2 mb-2">Waste Management</span>
+                            <span class="badge bg-warning me-2 mb-2">Sustainability</span>
+                            <span class="badge bg-info me-2 mb-2">System Design</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advisors Section -->
+        <div class="row mt-5">
+            <div class="col-lg-8 mx-auto text-center mb-4">
+                <h3 class="fw-bold mb-4">ที่ปรึกษาโครงการ</h3>
+            </div>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="advisor-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="advisor-avatar bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-check text-info fs-1"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">ครูกิจจารักษ์ หิรัญน้อย</h6>
+                        <p class="text-muted small mb-0">ครูที่ปรึกษาโครงการ</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="advisor-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="advisor-avatar bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-check text-warning fs-1"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">ครูสมเกียรติ ใจดี</h6>
+                        <p class="text-muted small mb-0">ครูที่ปรึกษาร่วม</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="advisor-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="advisor-avatar bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-check text-danger fs-1"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">คุณสุธน เจริญยุทธ</h6>
+                        <p class="text-muted small mb-0">ครูที่ปรึกษาร่วม</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Impact & Achievements Section -->
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">ผลกระทบและความสำเร็จ</h2>
+                <p class="lead text-muted">
+                    ผลลัพธ์ที่เกิดขึ้นจากการดำเนินโครงการ Trash For Coin
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="impact-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="impact-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-people text-primary fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold text-primary mb-2">1,247+</h3>
+                        <h6 class="fw-semibold mb-2">ผู้ใช้งานทั้งหมด</h6>
+                        <p class="text-muted small">
+                            จำนวนผู้ใช้งานที่เข้าร่วมโครงการ
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="impact-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="impact-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-recycle text-success fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold text-success mb-2">52,891</h3>
+                        <h6 class="fw-semibold mb-2">ขยะที่รีไซเคิล</h6>
+                        <p class="text-muted small">
+                            จำนวนบรรจุภัณฑ์ที่นำกลับมารีไซเคิล
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="impact-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="impact-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-cash-coin text-warning fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold text-warning mb-2">₿ 45,672</h3>
+                        <h6 class="fw-semibold mb-2">เงินมัดจำคืน</h6>
+                        <p class="text-muted small">
+                            จำนวนเงินมัดจำที่จ่ายคืนให้ผู้ใช้
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="impact-card card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <div class="impact-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-tree text-info fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold text-info mb-2">127</h3>
+                        <h6 class="fw-semibold mb-2">ต้นไม้ที่ช่วยรักษา</h6>
+                        <p class="text-muted small">
+                            เทียบเท่าต้นไม้ที่ช่วยรักษาได้
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="cta-content">
+                    <h2 class="display-5 fw-bold mb-4">พร้อมร่วมสร้างสิ่งแวดล้อมที่ดีขึ้น?</h2>
+                    <p class="lead text-white-50 mb-5">
+                        เริ่มต้นใช้งาน Trash For Coin วันนี้ และสัมผัสประสบการณ์การจัดการขยะแบบใหม่ 
+                        ที่ทั้งได้เงินและช่วยรักษาสิ่งแวดล้อม
+                    </p>
+                    
+                    <div class="cta-actions d-flex flex-wrap gap-3 justify-content-center mb-4">
+                        {% if not session.loggedin %}
+                        <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg px-5 py-3">
+                            <i class="bi bi-person-plus me-2"></i>เริ่มต้นใช้งาน
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-5 py-3">
+                            <i class="bi bi-envelope me-2"></i>ติดต่อเรา
+                        </a>
+                    </div>
+                    
+                    <div class="cta-features row g-3 justify-content-center">
+                        <div class="col-auto">
+                            <div class="feature-item d-flex align-items-center text-white-50">
+                                <i class="bi bi-check-circle-fill text-warning me-2"></i>
+                                <span class="small">ฟรี ไม่มีค่าใช้จ่าย</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="feature-item d-flex align-items-center text-white-50">
+                                <i class="bi bi-check-circle-fill text-warning me-2"></i>
+                                <span class="small">ปลอดภัย เชื่อถือได้</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="feature-item d-flex align-items-center text-white-50">
+                                <i class="bi bi-check-circle-fill text-warning me-2"></i>
+                                <span class="small">ใช้งานง่าย สะดวก</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enhanced CSS for animations -->
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .mission-card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    
+    .tech-card:hover {
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+    
+    .tech-card:hover .tech-icon {
+        transform: scale(1.1);
+        transition: all 0.3s ease;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+    
+    .team-card:hover .team-avatar {
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+    }
+    
+    .advisor-card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    
+    .impact-card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    
+    .impact-card:hover .impact-icon {
+        transform: scale(1.1);
+        transition: all 0.3s ease;
+    }
+    
+    .objective-card,
+    .waste-types-card {
+        border: none;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    
+    .objective-card .card-header,
+    .waste-types-card .card-header {
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+    
+    .objective-card .card-body,
+    .waste-types-card .card-body {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enhanced scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all cards and sections
+    document.querySelectorAll('.card, .tech-card, .team-card, .impact-card').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // Enhanced counter animation for impact section
+    function animateCounters() {
+        const counters = document.querySelectorAll('.impact-card h3');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent.replace(/[^\d]/g, ''));
+            const increment = target / 100;
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                
+                const formatted = Math.floor(current).toLocaleString();
+                const originalText = counter.textContent;
+                const prefix = originalText.match(/^[^\d]*/)[0];
+                counter.textContent = prefix + formatted;
+            }, 20);
+        });
+    }
+    
+    // Trigger counter animation when impact section is visible
+    const impactSection = document.querySelector('.impact-card');
+    if (impactSection) {
+        const impactObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    impactObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        impactObserver.observe(impactSection);
+    }
+    
+    // Enhanced parallax effect for hero section
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const heroBackground = document.querySelector('.hero-background');
+        const heroPattern = document.querySelector('.hero-pattern');
+        
+        if (heroBackground) {
+            heroBackground.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+        if (heroPattern) {
+            heroPattern.style.transform = `translateY(${scrolled * 0.3}px)`;
+        }
+    });
+</script>
+{% endblock %}

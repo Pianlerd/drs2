@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการ Bin และควบคุม Servo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the application */
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter font for better aesthetics */
+            background-color: #f0f2f5; /* Light gray background */
+            color: #333; /* Dark gray text color */
+        }
+        .container {
+            max-width: 1200px; /* Max width for content */
+            margin: 40px auto; /* Center the container with vertical margin */
+            padding: 20px; /* Padding inside the container */
+            background-color: #fff; /* White background for the content area */
+            border-radius: 12px; /* Rounded corners for the container */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Soft shadow for depth */
+        }
+        h1 {
+            color: #1a202c; /* Darker heading color */
+            text-align: center; /* Center align the main title */
+            margin-bottom: 30px; /* Space below the title */
+            font-size: 2.5rem; /* Large font size for main title */
+            font-weight: 700; /* Bold font weight */
+        }
+        h2 {
+            color: #1a202c; /* Darker heading color */
+            font-size: 1.8rem; /* Slightly smaller font for section titles */
+            font-weight: 600; /* Semi-bold font weight */
+            margin-bottom: 20px; /* Space below section titles */
+        }
+        /* Flash message styling for success and danger alerts */
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .flash-success {
+            background-color: #d4edda; /* Light green background */
+            color: #155724; /* Dark green text */
+            border: 1px solid #c3e6cb; /* Green border */
+        }
+        .flash-danger {
+            background-color: #f8d7da; /* Light red background */
+            color: #721c24; /* Dark red text */
+            border: 1px solid #f5c6cb; /* Red border */
+        }
+        /* Form group styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block; /* Make label a block element */
+            margin-bottom: 0.5rem; /* Space below label */
+            font-weight: 600; /* Semi-bold font for labels */
+            color: #4a5568; /* Grayish text color */
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%; /* Full width input */
+            padding: 0.75rem 1rem; /* Padding inside input fields */
+            border: 1px solid #cbd5e0; /* Light gray border */
+            border-radius: 8px; /* Rounded corners for inputs */
+            font-size: 1rem; /* Standard font size */
+            transition: border-color 0.2s; /* Smooth transition for border color */
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none; /* Remove default outline */
+            border-color: #4299e1; /* Blue border on focus */
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); /* Blue shadow on focus */
+        }
+        /* Button styling */
+        .btn {
+            padding: 0.75rem 1.5rem; /* Padding for buttons */
+            border-radius: 8px; /* Rounded corners for buttons */
+            font-weight: 700; /* Bold font for buttons */
+            cursor: pointer; /* Pointer cursor on hover */
+            transition: background-color 0.2s, transform 0.1s; /* Smooth transitions */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Soft shadow for buttons */
+        }
+        .btn-primary {
+            background-color: #4299e1; /* Blue background for primary buttons */
+            color: white; /* White text */
+            border: none; /* No border */
+        }
+        .btn-primary:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* Red background for danger buttons */
+            color: white; /* White text */
+            border: none; /* No border */
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Darker red on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+        .btn-success {
+            background-color: #10b981; /* Green background for success buttons */
+            color: white; /* White text */
+            border: none; /* No border */
+        }
+        .btn-success:hover {
+            background-color: #059669; /* Darker green on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+
+        /* Table styles for both sections (Servo and Order) */
+        table {
+            width: 100%; /* Full width table */
+            border-collapse: separate; /* Separate borders for cells */
+            border-spacing: 0; /* No spacing between cells */
+            margin-top: 2rem; /* Space above table */
+            background-color: #fff; /* White background for table */
+            border-radius: 12px; /* Rounded corners for the table */
+            overflow: hidden; /* Ensures rounded corners apply to content */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Soft shadow for table */
+        }
+        th, td {
+            padding: 1rem 1.25rem; /* Padding inside table cells */
+            text-align: left; /* Left align text in cells */
+            border-bottom: 1px solid #e2e8f0; /* Light gray bottom border for cells */
+        }
+        th {
+            background-color: #edf2f7; /* Light gray background for table headers */
+            color: #2d3748; /* Dark text for headers */
+            font-weight: 700; /* Bold font for headers */
+            text-transform: uppercase; /* Uppercase text for headers */
+            font-size: 0.875rem; /* Smaller font size for headers */
+            letter-spacing: 0.05em; /* Letter spacing for headers */
+        }
+        tr:last-child td {
+            border-bottom: none; /* No bottom border for last row cells */
+        }
+        tbody tr:hover {
+            background-color: #f7fafc; /* Lightest gray background on row hover */
+        }
+        .no-data {
+            text-align: center; /* Center align no data message */
+            padding: 2rem; /* Padding for no data message */
+            color: #718096; /* Gray text color */
+            font-size: 1.125rem; /* Slightly larger font size */
+        }
+        .action-buttons button {
+            margin-right: 0.5rem; /* Right margin for action buttons */
+        }
+
+        /* Specific styles for Servo control table buttons */
+        .servo-table .on { /* Changed class from .led-table to .servo-table */
+            background-color: #28a745; /* Green background for 'on' state */
+            color: white; /* White text */
+        }
+        .servo-table .off { /* Changed class from .led-table to .servo-table */
+            background-color: #dc3545; /* Red background for 'off' state */
+            color: white; /* White text */
+        }
+        .servo-table button { /* Changed class from .led-table to .servo-table */
+            padding: 8px 16px; /* Smaller padding for Servo buttons */
+            border-radius: 6px; /* Slightly less rounded corners */
+            font-weight: 600; /* Semi-bold font */
+            cursor: pointer; /* Pointer cursor */
+            transition: background-color 0.2s, transform 0.1s; /* Smooth transitions */
+        }
+        .servo-table button:hover { /* Changed class from .led-table to .servo-table */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>จัดการ Bin และควบคุม Servo</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="mb-10 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">ควบคุม Servo</h2>
+            {% if servo_data %}
+            <div class="overflow-x-auto">
+                <table class="servo-table">
+                    <thead>
+                        <tr>
+                            <th>Servo ขา</th>
+                            <th>สถานะ</th>
+                            <th>สลับสถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, value in servo_data.items() %}
+                        <tr>
+                            <td>{{ id }}</td>
+                            <td>{{ 'เปิด (30°)' if value == 1 else 'ปิด (0°)' }}</td>
+                            <td>
+                                <form action="{{ url_for('toggle_servo', servo_id=id) }}" method="post">
+                                    <button class="{{ 'on' if value == 0 else 'off' }}" type="submit">
+                                        {{ 'เปิด (หมุน 30°)' if value == 0 else 'ปิด (หมุน 0°)' }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form action="{{ url_for('bin') }}" method="post" class="mt-6 text-center">
+                <input type="hidden" name="action" value="reset_all_servos">
+                <input type="hidden" name="barcode_id_filter" value="{{ barcode_id_filter }}">
+                <button type="submit" class="btn btn-danger">
+                    รีเซ็ต Servo (category_id 1-5) เป็น 0°
+                </button>
+            </form>
+            {% else %}
+                <p class="no-data">ไม่พบข้อมูล Servo หรือเกิดข้อผิดพลาดในการเชื่อมต่อ.</p>
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="p-6 bg-gray-50 rounded-lg shadow-inner">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">ค้นหารายการสินค้า</h2>
+                <form id="search-form" action="{{ url_for('bin') }}" method="get" class="space-y-4">
+                    <div class="form-group">
+                        <label for="barcode_id_filter_input" class="block text-sm">รหัสบาร์โค้ด:</label>
+                        <input type="text" id="barcode_id_filter_input" name="barcode_id_filter"
+                               value="{{ barcode_id_filter }}"
+                               placeholder="กรอกรหัสบาร์โค้ด"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="submit" name="action" value="search"
+                                class="btn btn-primary flex-1">
+                            ค้นหา
+                        </button>
+                        <a href="{{ url_for('bin', barcode_id_filter='') }}"
+                           class="btn btn-danger flex-1 text-center py-3">
+                            รีเซ็ต
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-inner">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">เพิ่มจำนวนทิ้ง (+1)</h2>
+                <form action="{{ url_for('bin') }}" method="post" class="space-y-4">
+                    <input type="hidden" name="action" value="add_disquantity">
+                    <div class="form-group">
+                        <label for="barcode_id_for_disquantity" class="block text-sm">รหัสบาร์โค้ด:</label>
+                        <input type="text" id="barcode_id_for_disquantity" name="barcode_id_for_disquantity"
+                               value="{{ request_form_data.get('barcode_id_for_disquantity', barcode_id_filter) }}"
+                               placeholder="รหัสบาร์โค้ดของสินค้า" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="form-group">
+                        <label for="products_id_to_disquantity" class="block text-sm">รหัสสินค้า:</label>
+                        <input type="number" id="products_id_to_disquantity" name="products_id_to_disquantity"
+                               value="{{ request_form_data.get('products_id_to_disquantity', '') }}"
+                               placeholder="รหัสสินค้าที่ต้องการเพิ่มจำนวนทิ้ง" required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <button type="submit" class="btn btn-success w-full">
+                        เพิ่มจำนวนทิ้ง (+1)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">รายการคำสั่งซื้อ</h2>
+        {% if orders %}
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>รหัสบาร์โค้ด</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>รหัสสินค้า</th>
+                            <th>จำนวน</th>
+                            <th>จำนวนทิ้ง</th>
+                            <th>ราคา</th>
+                            <th>หมวดหมู่</th>
+                            <th>อีเมล</th>
+                            <th>วันที่สั่งซื้อ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.barcode_id }}</td>
+                            <td>{{ order.products_name }}</td>
+                            <td>{{ order.products_id }}</td>
+                            <td>{{ order.quantity }}</td>
+                            <td>{{ order.disquantity }}</td>
+                            <td>{{ order.price }}</td>
+                            <td>{{ order.category_id }}</td>
+                            <td>{{ order.email }}</td>
+                            <td>{{ order.order_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">
+                {% if barcode_id_filter %}
+                    ไม่พบรายการสินค้าสำหรับรหัสบาร์โค้ด "{{ barcode_id_filter }}"
+                {% else %}
+                    กรุณากรอกรหัสบาร์โค้ดเพื่อค้นหารายการสินค้า
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const barcodeInput = document.getElementById('barcode_id_filter_input');
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', () => {
+                    if (barcodeInput.value.length === 13) {
+                        document.getElementById('search-form').submit();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

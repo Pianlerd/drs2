@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>รายงานคำสั่งซื้อ - Trash For Coin</title>
+    <style>
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            font-size: 12px; 
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 20px;
+        }
+        .header h1 { 
+            color: #0d6efd; 
+            font-size: 24px; 
+            margin: 0;
+        }
+        .header p { 
+            color: #6c757d; 
+            margin: 10px 0;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0d6efd;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px;
+            font-size: 10px;
+        }
+        th, td { 
+            border: 1px solid #dee2e6; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .footer { 
+            text-align: center; 
+            font-size: 10px; 
+            color: #6c757d;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+        }
+        .summary {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .badge {
+            background-color: #198754;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>รายงานคำสั่งซื้อ</h1>
+        <p>ระบบ Trash For Coin - ขยะแลกเหรียญ</p>
+    </div>
+
+    <div class="info-box">
+        <strong>วันที่ออกรายงาน:</strong> {{ current_date }}<br>
+        <strong>จำนวนคำสั่งซื้อ:</strong> {{ orders|length }} รายการ<br>
+        <strong>ระบบมัดจำ:</strong> 1 บาทต่อบรรจุภัณฑ์ 1 ชิ้น
+    </div>
+
+    {% if orders %}
+    <table>
+        <thead>
+            <tr>
+                <th width="12%">รหัสคำสั่งซื้อ</th>
+                <th width="18%">ชื่อสินค้า</th>
+                <th width="8%">จำนวน</th>
+                <th width="10%">ราคา/หน่วย</th>
+                <th width="10%">เงินมัดจำ</th>
+                <th width="15%">อีเมลผู้ดำเนินการ</th>
+                <th width="12%">วันที่สั่งซื้อ</th>
+                <th width="8%">สต็อกคงเหลือ</th>
+                <th width="7%">สถานะ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.products_name }}</td>
+                <td class="text-center">{{ order.quantity }}</td>
+                <td class="text-right">{{ "%.2f"|format(order.price or 0) }} บาท</td>
+                <td class="text-right">{{ order.quantity }} บาท</td>
+                <td>{{ order.email }}</td>
+                <td class="text-center">{{ order.order_date.strftime('%d/%m/%Y %H:%M') if order.order_date else '-' }}</td>
+                <td class="text-center">{{ order.disquantity }}</td>
+                <td class="text-center">
+                    <span class="badge">สำเร็จ</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <h3>สรุปรายงาน</h3>
+        <p><strong>จำนวนคำสั่งซื้อทั้งหมด:</strong> {{ orders|length }} รายการ</p>
+        <p><strong>จำนวนบรรจุภัณฑ์ทั้งหมด:</strong> {{ orders|sum(attribute='quantity') }} ชิ้น</p>
+        <p><strong>เงินมัดจำทั้งหมด:</strong> {{ orders|sum(attribute='quantity') }} บาท</p>
+        <p><strong>ประโยชน์ต่อสิ่งแวดล้อม:</strong> ลดขยะที่ไปหลุมฝังกลบ {{ orders|sum(attribute='quantity') }} ชิ้น</p>
+    </div>
+    {% else %}
+    <div class="text-center">
+        <p>ไม่พบข้อมูลคำสั่งซื้อในช่วงเวลาที่เลือก</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>รายงานนี้สร้างโดยระบบ Trash For Coin</p>
+        <p>โครงการขยะแลกเหรียญ - ส่งเสริมการรีไซเคิลและการจัดการขยะอย่างยั่งยืน</p>
+        <p>พัฒนาโดย: นายเพียรเลิศ พริ้งเพราะ และ นายปพณ คุปตะพันธ์</p>
+    </div>
+</body>
+</html>

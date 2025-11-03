@@ -1,0 +1,562 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+#include <SPI.h>
+
+// Network credentials
+const char* ssid = "Galaxy Note10+306b";
+const char* password = "";
+
+// Servo configuration
+const int servoPins[] = {12, 13, 14, 26, 27};
+const int NUM_SERVOS = sizeof(servoPins) / sizeof(servoPins[0]);
+
+Servo myServos[NUM_SERVOS];
+int currentServoAngles[NUM_SERVOS];
+int targetServoAngles[NUM_SERVOS];
+bool isServoMoving[NUM_SERVOS];
+unsigned long servoMoveStartTime[NUM_SERVOS];
+const unsigned long SERVO_MOVE_DURATION = 5000;
+
+WebServer server(80);
+
+// IR sensor configuration
+#define IR_SENSOR_PIN 32
+int count = 0;
+bool objectDetected = false;
+
+// Flask server IP
+const char* flask_ip = "192.168.52.23";
+
+// TFT display setup
+TFT_eSPI tft = TFT_eSPI();
+
+// Cyberpunk color scheme - Black, Green, Red only
+#define COLOR_BACKGROUND  0x0000 // Pure Black
+#define COLOR_MATRIX_GREEN 0x07E0 // Matrix Green
+#define COLOR_CYBER_RED   0xF800 // Cyber Red
+#define COLOR_DARK_PANEL  0x1082 // Dark Grey Panel
+#define COLOR_BORDER      0x0410 // Dark Green Border
+
+// Display dimensions
+const int SCREEN_WIDTH = 400;
+const int SCREEN_HEIGHT = 320;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize TFT with cyberpunk startup
+  initializeTFTDisplay();
+  
+  // Initialize servo motors
+  initializeServoMotors();
+  
+  // Initialize IR sensor
+  pinMode(IR_SENSOR_PIN, INPUT);
+  
+  // Connect to WiFi with hacker-style feedback
+  connectToWiFi();
+  
+  // Setup web server routes
+  setupWebServer();
+}
+
+void loop() {
+  server.handleClient();
+  updateServoPositions();
+  handleIRSensor();
+}
+
+void initializeTFTDisplay() {
+  tft.init();
+  tft.setRotation(1);
+  
+  showCyberpunkBoot();
+  delay(1500);
+}
+
+void showCyberpunkBoot() {
+  tft.fillScreen(COLOR_BACKGROUND);
+
+  // Matrix-style grid
+  for (int i = 0; i < SCREEN_WIDTH; i += 25) {
+    tft.drawFastVLine(i, 0, SCREEN_HEIGHT, COLOR_BORDER);
+  }
+  for (int i = 0; i < SCREEN_HEIGHT; i += 25) {
+    tft.drawFastHLine(0, i, SCREEN_WIDTH, COLOR_BORDER);
+  }
+  
+  // System title with shadow effect
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.setTextSize(3);
+  tft.drawCentreString("NEURAL CORE", SCREEN_WIDTH/2 + 2, 52, 4);
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.drawCentreString("NEURAL CORE", SCREEN_WIDTH/2, 50, 4);
+
+  // Boot sequence text
+  tft.setTextSize(1);
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.drawString(">>> INITIALIZING QUANTUM PROTOCOLS", 20, 100, 2);
+  tft.drawString(">>> LOADING NEURAL PATHWAYS", 20, 120, 2);
+  tft.drawString(">>> ESTABLISHING SECURE CONNECTION", 20, 140, 2);
+
+  // Animated loading bar
+  drawCyberLoadingBar();
+}
+
+void drawCyberLoadingBar() {
+  int barWidth = 300;
+  int barHeight = 15;
+  int barX = (SCREEN_WIDTH - barWidth) / 2;
+  int barY = 200;
+  
+  // Bar border
+  tft.drawRoundRect(barX, barY, barWidth, barHeight, 3, COLOR_MATRIX_GREEN);
+  
+  // Animated progress
+  for (int i = 0; i <= 100; i += 4) {
+    int progressWidth = map(i, 0, 100, 0, barWidth - 4);
+    if (progressWidth > 0) {
+      tft.fillRect(barX + 2, barY + 2, progressWidth, barHeight - 4, COLOR_MATRIX_GREEN);
+    }
+    
+    // Progress percentage
+    tft.fillRect(barX, barY + 25, 200, 20, COLOR_BACKGROUND);
+    tft.setTextColor(COLOR_MATRIX_GREEN);
+    tft.drawString("SYSTEM BOOT: " + String(i) + "% COMPLETE", barX, barY + 30, 2);
+    
+    delay(60);
+  }
+}
+
+void initializeServoMotors() {
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    myServos[i].attach(servoPins[i], 500, 2500);
+    myServos[i].write(0);
+    currentServoAngles[i] = 0;
+    targetServoAngles[i] = 0;
+    isServoMoving[i] = false;
+    Serial.print("Servo on GPIO ");
+    Serial.print(servoPins[i]);
+    Serial.println(" initialized to 0 degrees.");
+  }
+}
+
+void connectToWiFi() {
+  showNetworkHacking();
+  
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 20) {
+    delay(500);
+    Serial.print(".");
+    updateHackingProgress(retries);
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    showNetworkCompromised();
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    showSecurityBreach("NETWORK INFILTRATION FAILED");
+    Serial.println("\nFailed to connect to WiFi.");
+  }
+}
+
+void showNetworkHacking() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawCyberHeader("NETWORK INFILTRATION");
+  
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(1);
+  tft.drawString(">>> SCANNING FOR VULNERABILITIES", 20, 80, 2);
+  tft.drawString(">>> BYPASSING FIREWALL PROTOCOLS", 20, 100, 2);
+  tft.drawString(">>> INJECTING PAYLOAD", 20, 120, 2);
+  tft.drawString(">>> ESTABLISHING BACKDOOR", 20, 140, 2);
+  
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.drawCentreString("TARGET: " + String(ssid), SCREEN_WIDTH/2, 160, 2);
+}
+
+void updateHackingProgress(int attempt) {
+  int barY = 200;
+  int barWidth = 350;
+  int barX = (SCREEN_WIDTH - barWidth) / 2;
+  
+  // Clear previous
+  tft.fillRect(barX, barY, barWidth, 60, COLOR_BACKGROUND);
+  
+  // Progress bar
+  tft.drawRect(barX, barY, barWidth, 20, COLOR_MATRIX_GREEN);
+  int progress = map(attempt, 0, 20, 0, barWidth - 4);
+  if(progress > 0) {
+    tft.fillRect(barX + 2, barY + 2, progress, 16, COLOR_MATRIX_GREEN);
+  }
+  
+  // Binary-style progress
+  String binary = "";
+  for(int i = 0; i < 16; i++) {
+    binary += (random(0, 2) == 1) ? "1" : "0";
+  }
+  
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.drawCentreString("DECRYPTING: " + binary, SCREEN_WIDTH/2, barY + 30, 2);
+  
+  int percent = map(attempt, 0, 20, 0, 100);
+  tft.drawCentreString("PROGRESS: " + String(percent) + "%", SCREEN_WIDTH/2, barY + 50, 2);
+}
+
+void showNetworkCompromised() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawCyberHeader("ACCESS GRANTED");
+  
+  // Success message with glitch effect
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.setTextSize(3);
+  tft.drawCentreString("NETWORK", SCREEN_WIDTH/2 + 1, 81, 4);
+  tft.drawCentreString("COMPROMISED", SCREEN_WIDTH/2 + 1, 121, 4);
+  
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.drawCentreString("NETWORK", SCREEN_WIDTH/2, 80, 4);
+  tft.drawCentreString("COMPROMISED", SCREEN_WIDTH/2, 120, 4);
+
+  // Connection details
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("root@neural-core:~$ ifconfig", 20, 170, 2);
+  tft.drawString("inet " + WiFi.localIP().toString(), 20, 190, 2);
+  tft.drawString("netmask 255.255.255.0", 20, 210, 2);
+  
+  tft.drawString("root@neural-core:~$ systemctl status", 20, 240, 2);
+  tft.drawString("● neural-core.service - ACTIVE", 20, 260, 2);
+  
+  delay(3000);
+  showCyberDashboard();
+}
+
+void showSecurityBreach(String message) {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawCyberHeader("SECURITY BREACH");
+  
+  // Alert flash
+  for(int i = 0; i < 3; i++) {
+    tft.fillScreen(COLOR_CYBER_RED);
+    delay(150);
+    tft.fillScreen(COLOR_BACKGROUND);
+    delay(150);
+  }
+  
+  drawCyberHeader("SECURITY BREACH");
+  
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.setTextSize(2);
+  tft.drawCentreString(message, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 2);
+  
+  tft.setTextSize(1);
+  tft.drawCentreString("SYSTEM LOCKDOWN INITIATED", SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 40, 2);
+}
+
+void showCyberDashboard() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawCyberHeader("NEURAL INTERFACE");
+  
+  // System status panel
+  drawCyberPanel(10, 50, 185, 120, "CORE STATUS");
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("SYS_STATUS: ONLINE", 20, 75, 2);
+  tft.drawString("SERVO_UNITS: " + String(NUM_SERVOS), 20, 95, 2);
+  tft.drawString("IR_TRIGGERS: " + String(count), 20, 115, 2);
+  tft.drawString("TEMP: 42C", 20, 135, 2);
+
+  // Network panel
+  drawCyberPanel(205, 50, 185, 120, "NETWORK");
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.drawString("WLAN: CONNECTED", 215, 75, 2);
+  tft.drawString("IP: " + WiFi.localIP().toString(), 215, 95, 2);
+  tft.drawString("SERVER: ACTIVE", 215, 115, 2);
+  tft.drawString("FLASK: " + String(flask_ip), 215, 135, 2);
+
+  // Servo monitor
+  drawCyberPanel(10, 180, SCREEN_WIDTH - 20, 100, "SERVO MATRIX");
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  for(int i = 0; i < NUM_SERVOS; i++) {
+    String status = "S" + String(i+1) + " [" + String(servoPins[i]) + "]: " + String(currentServoAngles[i]) + "°";
+    tft.drawString(status, 20 + (i % 2) * 180, 205 + (i / 2) * 20, 2);
+  }
+  
+  drawCyberStatusBar();
+}
+
+void setupWebServer() {
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    String pathOn = "/servo" + String(servoPins[i]) + "/on";
+    String pathOff = "/servo" + String(servoPins[i]) + "/off";
+
+    server.on(pathOn.c_str(), HTTP_GET, [=]() { handleServo(i, HIGH); });
+    server.on(pathOff.c_str(), HTTP_GET, [=]() { handleServo(i, LOW); });
+  }
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.onNotFound(handleNotFound);
+
+  server.on("/oled", HTTP_POST, [](){
+    String payload = server.arg("plain");
+    showCustomMessage(payload);
+    server.send(200, "text/plain", "Neural interface updated");
+  });
+
+  server.begin();
+  Serial.println("HTTP server started.");
+}
+
+void showCustomMessage(String message) {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawCyberHeader("INCOMING TRANSMISSION");
+  
+  int panelX = 20;
+  int panelY = 60;
+  int panelW = SCREEN_WIDTH - 40;
+  int panelH = 200;
+  
+  drawCyberPanel(panelX, panelY, panelW, panelH, "ENCRYPTED DATA");
+
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(2);
+  
+  int cursorY = panelY + 30;
+  int lineHeight = 25;
+  int currentPos = 0;
+  int prevPos = 0;
+  int lineNum = 0;
+
+  while (currentPos < message.length() && lineNum < 5) {
+    currentPos = message.indexOf('\n', prevPos);
+    String line;
+    if (currentPos == -1) {
+      line = message.substring(prevPos);
+    } else {
+      line = message.substring(prevPos, currentPos);
+    }
+
+    if (line.length() > 20) {
+      line = line.substring(0, 20);
+    }
+    
+    tft.drawString(line, panelX + 10, cursorY, 2); 
+    cursorY += lineHeight;
+    prevPos = currentPos + 1;
+    lineNum++;
+
+    if (currentPos == -1) break;
+  }
+  
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.setTextSize(1);
+  tft.drawString("TIMESTAMP: " + String(millis() / 1000) + "s", panelX + 10, panelY + panelH - 20, 1);
+}
+
+void handleIRSensor() {
+  int sensorValue = digitalRead(IR_SENSOR_PIN);
+  if (sensorValue == LOW && !objectDetected) {
+    count++;
+    objectDetected = true;
+    
+    updateCounterDisplay();
+    
+    Serial.print("Count: ");
+    Serial.println(count);
+    Serial.println("Sensor triggered! Sending reset command to Flask.");
+    sendResetCommandToFlask();
+  } else if (sensorValue == HIGH && objectDetected) {
+    objectDetected = false;
+  }
+}
+
+void updateCounterDisplay() {
+  int x = 20;
+  int y = 115;
+  int w = 150;
+  int h = 16;
+
+  tft.fillRect(x, y, w, h, COLOR_DARK_PANEL);
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("IR_TRIGGERS: " + String(count), x, y, 2);
+}
+
+void drawCyberHeader(String title) {
+  // Header with gradient effect
+  for(int y = 0; y < 40; y++) {
+    uint16_t color = map(y, 0, 40, COLOR_DARK_PANEL, COLOR_BACKGROUND);
+    tft.drawFastHLine(0, y, SCREEN_WIDTH, color);
+  }
+  
+  tft.drawFastHLine(0, 0, SCREEN_WIDTH, COLOR_MATRIX_GREEN);
+  tft.drawFastHLine(0, 39, SCREEN_WIDTH, COLOR_MATRIX_GREEN);
+  
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(2);
+  tft.drawCentreString(title, SCREEN_WIDTH/2, 12, 2);
+  
+  // Corner brackets
+  tft.drawString("╔", 5, 5, 2);
+  tft.drawString("╗", SCREEN_WIDTH - 20, 5, 2);
+}
+
+void drawCyberPanel(int x, int y, int w, int h, String title) {
+  // Panel background
+  tft.fillRoundRect(x, y, w, h, 3, COLOR_DARK_PANEL);
+  
+  // Glowing border
+  tft.drawRoundRect(x, y, w, h, 3, COLOR_MATRIX_GREEN);
+  tft.drawRoundRect(x-1, y-1, w+2, h+2, 4, COLOR_BORDER);
+  
+  // Title bar
+  tft.fillRect(x + 2, y + 2, w - 4, 18, COLOR_MATRIX_GREEN);
+  tft.setTextColor(COLOR_BACKGROUND);
+  tft.setTextSize(1);
+  tft.drawCentreString(title, x + w/2, y + 6, 2);
+}
+
+void drawCyberStatusBar() {
+  int barY = SCREEN_HEIGHT - 25;
+  
+  tft.fillRect(0, barY, SCREEN_WIDTH, 25, COLOR_DARK_PANEL);
+  tft.drawFastHLine(0, barY, SCREEN_WIDTH, COLOR_MATRIX_GREEN);
+  
+  // Scrolling status text
+  static int scrollOffset = 0;
+  static unsigned long lastScroll = 0;
+  
+  if(millis() - lastScroll > 100) {
+    scrollOffset++;
+    if(scrollOffset > 300) scrollOffset = -150;
+    lastScroll = millis();
+  }
+  
+  String scrollText = ">>> NEURAL CORE ACTIVE >>> ALL SYSTEMS NOMINAL >>> ";
+  
+  tft.setTextColor(COLOR_MATRIX_GREEN);
+  tft.setTextSize(1);
+  tft.drawString(scrollText, scrollOffset, barY + 8, 1);
+  
+  // System time
+  tft.setTextColor(COLOR_CYBER_RED);
+  tft.drawString(String(millis()/1000), SCREEN_WIDTH - 50, barY + 8, 1);
+}
+
+// Original functions maintained exactly
+void handleRoot() {
+  String html = "<html><body><h1>ESP32 Servo Control</h1>";
+  html += "<p>Connected to WiFi: " + String(ssid) + "</p>";
+  html += "<p>IP Address: " + WiFi.localIP().toString() + "</p>";
+  html += "<h2>Control Servos:</h2><ul>";
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    html += "<li>Servo on GPIO " + String(servoPins[i]) + ": ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/on'>ON (60 deg)</a> | ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/off'>OFF (0 deg)</a>";
+    html += "</li>";
+  }
+  html += "</ul></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleServo(int servoIndex, int state) {
+  int targetAngle;
+  String stateStr;
+  if (state == HIGH) {
+    targetAngle = 60;
+    stateStr = "ON (60 degrees)";
+  } else {
+    targetAngle = 0;
+    stateStr = "OFF (0 degrees)";
+  }
+
+  targetServoAngles[servoIndex] = targetAngle;
+  servoMoveStartTime[servoIndex] = millis();
+  isServoMoving[servoIndex] = true;
+
+  Serial.print("Servo on GPIO ");
+  Serial.print(servoPins[servoIndex]);
+  Serial.print(" command: ");
+  Serial.println(stateStr);
+  server.send(200, "text/plain", "Servo " + String(servoPins[servoIndex]) + " command: " + stateStr);
+}
+
+void updateServoPositions() {
+  unsigned long currentTime = millis();
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (isServoMoving[i]) {
+      unsigned long elapsedTime = currentTime - servoMoveStartTime[i];
+      if (elapsedTime < SERVO_MOVE_DURATION) {
+        float progress = (float)elapsedTime / SERVO_MOVE_DURATION;
+        int startAngle = currentServoAngles[i];
+        int newAngle = startAngle + (int)((targetServoAngles[i] - startAngle) * progress);
+
+        myServos[i].write(newAngle);
+        currentServoAngles[i] = newAngle;
+      } else {
+        myServos[i].write(targetServoAngles[i]);
+        currentServoAngles[i] = targetServoAngles[i];
+        isServoMoving[i] = false;
+        Serial.print("Servo on GPIO ");
+        Serial.print(servoPins[i]);
+        Serial.print(" reached target angle: ");
+        Serial.println(targetServoAngles[i]);
+      }
+    }
+  }
+}
+
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  Serial.println(message);
+}
+
+void sendResetCommandToFlask() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String serverPath = "http://" + String(flask_ip) + ":5000/sensor_reset";
+    http.begin(serverPath.c_str());
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) {
+      Serial.printf("[HTTP] GET... code: %d\n", httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected, cannot send reset command.");
+  }
+}

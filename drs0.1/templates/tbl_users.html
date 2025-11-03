@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการผู้ใช้งาน - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="btn-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">จัดการผู้ใช้งาน</h1>
+                <p class="lead mb-4">จัดการผู้ใช้งานและสิทธิ์การเข้าถึงระบบ</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-end">
+                    {% if session.loggedin and (session.role == 'root_admin' or session.role == 'administrator') %}
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="bi bi-person-plus me-2"></i>เพิ่มผู้ใช้งาน
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4 bg-light">
+    <div class="container">
+        <form method="POST" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อ, นามสกุล, อีเมล หรือบทบาท" value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-2"></i>ค้นหา
+                    </button>
+                    <a href="{{ url_for('tbl_users') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise me-2"></i>รีเซ็ต
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+<section class="py-5">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-people me-2"></i>รายการผู้ใช้งาน
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" width="5%">#</th>
+                                <th scope="col" width="15%">ชื่อ-นามสกุล</th>
+                                <th scope="col" width="20%">อีเมล</th>
+                                <th scope="col" width="10%">บทบาท</th>
+                                <th scope="col" width="15%">ร้านค้า</th>
+                                <th scope="col" width="10%">สถานะ</th>
+                                <th scope="col" width="15%">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                            <i class="bi bi-person-fill text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ user.firstname }} {{ user.lastname }}</h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge fs-6 px-2 py-1
+                                        {% if user.role == 'root_admin' %}bg-danger
+                                        {% elif user.role == 'administrator' %}bg-warning text-dark
+                                        {% elif user.role == 'moderator' %}bg-info text-dark
+                                        {% elif user.role == 'member' %}bg-primary
+                                        {% elif user.role == 'viewer' %}bg-secondary
+                                        {% else %}bg-light text-dark{% endif %}">
+                                        {{ user.role | title }}
+                                    </span>
+                                </td>
+                                <td>{{ user.store_name if user.store_name else 'ไม่ได้กำหนด' }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <!-- ปุ่มแก้ไข -->
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            data-id="{{ user.id }}"
+                                            data-firstname="{{ user.firstname }}"
+                                            data-lastname="{{ user.lastname }}"
+                                            data-email="{{ user.email }}"
+                                            data-role="{{ user.role }}"
+                                            data-store_id="{{ user.store_id if user.store_id is not none else '' }}"
+                                            onclick="editUserFromData(this)"
+                                            {% if session.role == 'administrator' and user.role == 'root_admin' %}disabled{% endif %}
+                                            {% if session.role == 'moderator' and user.role != 'member' %}disabled{% endif %}
+                                            {% if session.role == 'moderator' and user.store_id != session.store_id %}disabled{% endif %}
+                                            data-bs-toggle="modal" data-bs-target="#editUserModal">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+
+                                        <!-- ปุ่มลบ -->
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            data-id="{{ user.id }}"
+                                            data-name="{{ user.firstname }} {{ user.lastname }}"
+                                            onclick="deleteUserFromData(this)"
+                                            {% if session.role == 'administrator' and user.role == 'root_admin' %}disabled{% endif %}
+                                            {% if session.role == 'moderator' and user.role != 'member' %}disabled{% endif %}
+                                            {% if session.role == 'moderator' and user.store_id != session.store_id %}disabled{% endif %}>
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 mb-2"></i>
+                                    <br>ไม่พบข้อมูลผู้ใช้งาน
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function editUserFromData(btn) {
+    editUser(
+        btn.dataset.id,
+        btn.dataset.firstname,
+        btn.dataset.lastname,
+        btn.dataset.email,
+        btn.dataset.role,
+        btn.dataset.store_id
+    );
+}
+
+function deleteUserFromData(btn) {
+    deleteUser(
+        btn.dataset.id,
+        btn.dataset.name
+    );
+}
+</script>
+
+
+{# เพิ่มผู้ใช้งานใหม่ Modal #}
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">เพิ่มผู้ใช้งานใหม่</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="add_firstname" class="form-label">ชื่อ</label>
+                            <input type="text" class="form-control" id="add_firstname" name="firstname" required>
+                            <div class="invalid-feedback">กรุณากรอกชื่อ</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="add_lastname" class="form-label">นามสกุล</label>
+                            <input type="text" class="form-control" id="add_lastname" name="lastname" required>
+                            <div class="invalid-feedback">กรุณากรอกนามสกุล</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_email" class="form-label">อีเมล</label>
+                        <input type="email" class="form-control" id="add_email" name="email" required>
+                        <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_password" class="form-label">รหัสผ่าน</label>
+                        <input type="password" class="form-control" id="add_password" name="password" required>
+                        <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add_role" class="form-label">บทบาท</label>
+                        <select class="form-select" id="add_role" name="role" required 
+                                {% if session.role == 'moderator' %}onchange="restrictModeratorRole(this)"{% endif %}> {# เพิ่ม onchange #}
+                            <option value="">เลือกบทบาท</option>
+                            {% if session.role == 'root_admin' %}
+                            <option value="root_admin">Root Admin</option>
+                            {% endif %}
+                            {% if session.role in ['root_admin', 'administrator'] %}
+                            <option value="administrator">Administrator</option>
+                            {% endif %}
+                            {% if session.role == 'root_admin' %} {# ให้ root_admin เท่านั้นที่เพิ่ม moderator ได้ #}
+                            <option value="moderator">Moderator</option>
+                            {% endif %}
+                            <option value="member" {% if session.role == 'moderator' %}selected{% endif %}>Member</option> {# Moderator จะถูกเลือก Member โดยอัตโนมัติ #}
+                            {% if session.role in ['root_admin', 'administrator'] %}
+                            <option value="viewer">Viewer</option>
+                            {% endif %}
+                        </select>
+                        <div class="invalid-feedback">กรุณาเลือกบทบาท</div>
+                    </div>
+                    {# เพิ่ม: Dropdown สำหรับเลือกสาขา (Store) #}
+                    <div class="mb-3">
+                        <label for="add_store_id" class="form-label">สาขา (Store)</label>
+                        <select class="form-select" id="add_store_id" name="store_id" 
+                                {% if session.role == 'moderator' %}disabled{% endif %}> {# Moderator ถูก disabled #}
+                            <option value="">ไม่ได้กำหนด</option>
+                            {% for store in stores %}
+                            <option value="{{ store.store_id }}" 
+                                    {% if session.role == 'moderator' and session.store_id == store.store_id %}selected{% endif %}> {# Moderator ถูกเลือกสาขาตัวเองโดยอัตโนมัติ #}
+                                {{ store.store_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">เฉพาะ Root Admin และ Administrator ที่สามารถกำหนดสาขาได้</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>บทบาทผู้ใช้งาน:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% if session.role == 'root_admin' %}
+                            <li><strong>Root Admin:</strong> สิทธิ์สูงสุดในระบบ</li>
+                            {% endif %}
+                            <li><strong>Administrator:</strong> จัดการผู้ใช้งานและข้อมูลทั้งหมด</li>
+                            <li><strong>Moderator:</strong> จัดการสินค้าและคำสั่งซื้อ (และ Member ในร้านค้าตนเอง)</li>
+                            <li><strong>Member:</strong> ดูและจัดการคำสั่งซื้อของตนเอง</li>
+                            <li><strong>Viewer:</strong> ดูข้อมูลทั่วไปเท่านั้น</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">เพิ่มผู้ใช้งาน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# แก้ไขผู้ใช้งาน Modal #}
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">แก้ไขผู้ใช้งาน</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="user_id" id="edit_user_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_firstname" class="form-label">ชื่อ</label>
+                            <input type="text" class="form-control" id="edit_firstname" name="firstname" required>
+                            <div class="invalid-feedback">กรุณากรอกชื่อ</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_lastname" class="form-label">นามสกุล</label>
+                            <input type="text" class="form-control" id="edit_lastname" name="lastname" required>
+                            <div class="invalid-feedback">กรุณากรอกนามสกุล</div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label">อีเมล</label>
+                        <input type="email" class="form-control" id="edit_email" name="email" required>
+                        <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_password" class="form-label">รหัสผ่าน (เว้นว่างหากไม่ต้องการเปลี่ยน)</label>
+                        <input type="password" class="form-control" id="edit_password" name="password">
+                        <div class="form-text">กรอกรหัสผ่านใหม่หากต้องการเปลี่ยน มิฉะนั้นปล่อยว่างไว้</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_role" class="form-label">บทบาท</label>
+                        <select class="form-select" id="edit_role" name="role" required 
+                                {% if session.role == 'moderator' %}disabled{% endif %}> {# แก้ไข: Moderator ไม่สามารถเปลี่ยนบทบาทได้ #}
+                            <option value="">เลือกบทบาท</option>
+                            {% if session.role == 'root_admin' %}
+                            <option value="root_admin">Root Admin</option>
+                            {% endif %}
+                            {% if session.role in ['root_admin', 'administrator'] %}
+                            <option value="administrator">Administrator</option>
+                            {% endif %}
+                            {% if session.role == 'root_admin' %} {# ให้ root_admin เท่านั้นที่แก้ไขเป็น moderator ได้ #}
+                            <option value="moderator">Moderator</option>
+                            {% endif %}
+                            <option value="member">Member</option>
+                            {% if session.role in ['root_admin', 'administrator'] %}
+                            <option value="viewer">Viewer</option>
+                            {% endif %}
+                        </select>
+                        <div class="invalid-feedback">กรุณาเลือกบทบาท</div>
+                    </div>
+                    {# เพิ่ม: Dropdown สำหรับเลือกสาขา (Store) #}
+                    <div class="mb-3">
+                        <label for="edit_store_id" class="form-label">สาขา (Store)</label>
+                        <select class="form-select" id="edit_store_id" name="store_id" 
+                                {% if session.role == 'moderator' %}disabled{% endif %}> {# แก้ไข: Moderator ไม่สามารถเปลี่ยนสาขาได้ #}
+                            <option value="">ไม่ได้กำหนด</option>
+                            {% for store in stores %}
+                            <option value="{{ store.store_id }}">{{ store.store_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">เฉพาะ Root Admin และ Administrator ที่สามารถกำหนดสาขาได้</div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>บทบาทผู้ใช้งาน:</strong>
+                        <ul class="mb-0 mt-2">
+                            {% if session.role == 'root_admin' %}
+                            <li><strong>Root Admin:</strong> สิทธิ์สูงสุดในระบบ</li>
+                            {% endif %}
+                            <li><strong>Administrator:</strong> จัดการผู้ใช้งานและข้อมูลทั้งหมด</li>
+                            <li><strong>Moderator:</strong> จัดการสินค้าและคำสั่งซื้อ (และ Member ในร้านค้าตนเอง)</li>
+                            <li><strong>Member:</strong> ดูและจัดการคำสั่งซื้อของตนเอง</li>
+                            <li><strong>Viewer:</strong> ดูข้อมูลทั่วไปเท่านั้น</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="user_id" id="delete_user_id">
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByTagName('form');
+            var validation = Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // Function to populate and show the edit user modal
+    function editUser(id, firstname, lastname, email, role, store_id) { 
+        document.getElementById('edit_user_id').value = id;
+        document.getElementById('edit_firstname').value = firstname;
+        document.getElementById('edit_lastname').value = lastname;
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_role').value = role;
+        document.getElementById('edit_password').value = ''; // Clear password field for security
+        
+        // แก้ไข: กำหนดค่าและ disabled/enabled สำหรับ store_id ใน modal แก้ไข
+        var editStoreSelect = document.getElementById('edit_store_id');
+        for (var i = 0; i < editStoreSelect.options.length; i++) {
+            if (editStoreSelect.options[i].value === store_id) {
+                editStoreSelect.options[i].selected = true;
+                break;
+            }
+        }
+        // Disabled store_id dropdown for moderator
+        if ("{{ session.role }}" === "moderator") {
+            editStoreSelect.disabled = true;
+        } else {
+            editStoreSelect.disabled = false;
+        }
+
+        var editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        editUserModal.show();
+    }
+
+    function deleteUser(id, name) {
+        if (confirm('ต้องการลบผู้ใช้งาน ' + name + ' หรือไม่?')) {
+            document.getElementById('delete_user_id').value = id;
+            document.getElementById('deleteForm').submit();
+        }
+    }
+
+    // เพิ่ม: ฟังก์ชันสำหรับจำกัดบทบาทและสาขาสำหรับ Moderator ใน Add User Modal
+    function restrictModeratorRole(selectElement) {
+        var addStoreSelect = document.getElementById('add_store_id');
+        if ("{{ session.role }}" === "moderator") {
+            if (selectElement.value !== "member") {
+                alert("Moderator สามารถเพิ่มผู้ใช้งานได้เฉพาะบทบาท 'Member' เท่านั้น");
+                selectElement.value = "member"; // บังคับให้เลือก Member
+            }
+            // บังคับเลือก store_id ของตัวเอง และ disabled
+            for (var i = 0; i < addStoreSelect.options.length; i++) {
+                if (addStoreSelect.options[i].value === "{{ session.store_id }}") {
+                    addStoreSelect.options[i].selected = true;
+                    break;
+                }
+            }
+            addStoreSelect.disabled = true;
+        } else {
+            addStoreSelect.disabled = false;
+        }
+    }
+
+    // เรียกใช้ restrictModeratorRole เมื่อ modal โหลดครั้งแรกสำหรับ add user
+    document.addEventListener('DOMContentLoaded', function() {
+        var addRoleSelect = document.getElementById('add_role');
+        if (addRoleSelect) { // Check if the element exists
+            restrictModeratorRole(addRoleSelect); 
+        }
+    });
+
+    // Event listener for when the add user modal is shown to re-apply restrictions
+    var addUserModalElement = document.getElementById('addUserModal');
+    if (addUserModalElement) {
+        addUserModalElement.addEventListener('show.bs.modal', function () {
+            var addRoleSelect = document.getElementById('add_role');
+            if (addRoleSelect) {
+                // Reset to default selection or apply moderator default
+                if ("{{ session.role }}" === "moderator") {
+                    addRoleSelect.value = "member";
+                } else {
+                    addRoleSelect.value = ""; // Or any other default you prefer
+                }
+                restrictModeratorRole(addRoleSelect); // Apply restrictions
+            }
+            // Clear password field every time the modal opens
+            document.getElementById('add_password').value = '';
+        });
+    }
+
+</script>
+{% endblock %}

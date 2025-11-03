@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+
+{% block title %}โปรไฟล์ - Trash For Coin | จัดการข้อมูลส่วนตัว{% endblock %}
+
+{% block content %}
+<section class="profile-section py-5 position-relative overflow-hidden">
+    <div class="profile-background position-absolute w-100 h-100" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); opacity: 0.8;"></div>
+    <div class="profile-pattern position-absolute w-100 h-100" style="background-image: url('data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Cdefs%3E%3Cpattern id%3D%22grid%22 width%3D%2220%22 height%3D%2220%22 patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath d%3D%22M 20 0 L 0 0 0 20%22 fill%3D%22none%22 stroke%3D%22rgba(5%2C150%2C105%2C0.05)%22 stroke-width%3D%221%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect width%3D%22100%22 height%3D%22100%22 fill%3D%22url(%23grid)%22%2F%2F%3E%3C%2Fsvg%3E'); opacity: 0.5;"></div>
+    <div class="container position-relative">
+        <div class="row py-5">
+            <div class="col-lg-4 mb-4">
+                <div class="profile-sidebar-card card shadow-lg border-0 sticky-top" style="top: 100px;">
+                    <div class="card-body text-center p-5">
+                        {% if session.loggedin %}
+                        <div class="profile-avatar bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 120px; height: 120px;">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        
+                        <h4 class="fw-bold mb-2">{{ session.firstname }} {{ session.lastname }}</h4>
+                        <p class="text-muted mb-3">{{ session.email }}</p>
+                        
+                        <div class="role-badge mb-4">
+                            <span class="badge fs-6 px-3 py-2
+                                {% if session.role == 'root_admin' %}bg-danger
+                                {% elif session.role == 'administrator' %}bg-warning text-dark
+                                {% elif session.role == 'moderator' %}bg-info text-dark
+                                {% elif session.role == 'member' %}bg-primary
+                                {% elif session.role == 'viewer' %}bg-secondary
+                                {% else %}bg-light text-dark{% endif %}">
+                                <i class="bi bi-shield-check me-2"></i>
+                                {{ session.role | title }}
+                            </span>
+                        </div>
+                        
+                        <div class="profile-stats row g-3 mb-4">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h5 class="fw-bold text-primary mb-1">{{ order_count }}</h5>
+                                    <small class="text-muted">คำสั่งซื้อ</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h5 class="fw-bold text-success mb-1">₿ {{ "{:,}".format(total_quantity) }}</h5>
+                                    <small class="text-muted">เงินมัดจำ</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <h5 class="fw-bold text-warning mb-1">{{ recycling_rate }}%</h5>
+                                    <small class="text-muted">คะแนน</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-actions d-grid gap-2">
+                            <a href="{{ url_for('tbl_order') }}" class="btn btn-primary">
+                                <i class="bi bi-cart-check me-2"></i>ดูคำสั่งซื้อ
+                            </a>
+                            {% if session.role in ['root_admin', 'administrator', 'moderator'] %}
+                            <a href="{{ url_for('cart') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-upc-scan me-2"></i>สแกนสินค้า
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="security-info mt-4 p-3 bg-light rounded">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <i class="bi bi-shield-check text-success me-2"></i>
+                                <small class="fw-semibold">บัญชีปลอดภัย</small>
+                            </div>
+                            <small class="text-muted">เข้าสู่ระบบล่าสุด: วันนี้</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-8">
+                <div class="profile-content-card card shadow-lg border-0">
+                    <div class="card-header bg-gradient text-white border-0 p-4" 
+                         style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                        <h3 class="mb-0 fw-bold">
+                            <i class="bi bi-person-gear me-2"></i>
+                            ข้อมูลส่วนตัว
+                        </h3>
+                        <p class="mb-0 mt-2 text-white-50">จัดการและอัปเดตข้อมูลของคุณ</p>
+                    </div>
+                    <div class="card-body p-5">
+                        {% if session.loggedin %}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" class="needs-validation profile-form" novalidate>
+                            <div class="form-section mb-5">
+                                <h5 class="fw-bold text-primary mb-4">
+                                    <i class="bi bi-person me-2"></i>ข้อมูลส่วนตัว
+                                </h5>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label for="firstname" class="form-label fw-semibold">ชื่อ <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-person text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="firstname" name="firstname" 
+                                                    value="{{ session.firstname }}" required>
+                                            <div class="invalid-feedback">กรุณากรอกชื่อ</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lastname" class="form-label fw-semibold">นามสกุล <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-person text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="lastname" name="lastname" 
+                                                    value="{{ session.lastname }}" required>
+                                            <div class="invalid-feedback">กรุณากรอกนามสกุล</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="fw-bold text-primary mb-0"><i class="bi bi-shield-lock me-2"></i>ข้อมูลบัญชีและความปลอดภัย</h5>
+                                    <button type="button" class="btn btn-outline-secondary" id="enableSecurityEditBtn">
+                                        <i class="bi bi-pencil-square me-2"></i>แก้ไขข้อมูลความปลอดภัย
+                                    </button>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label for="email" class="form-label fw-semibold">อีเมล <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-envelope text-muted"></i>
+                                            </span>
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                    value="{{ session.email }}" readonly required>
+                                            <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            หากต้องการแก้ไข กรุณากดปุ่ม "แก้ไขข้อมูลความปลอดภัย"
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="securityFields" class="form-section mb-5" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>คุณกำลังแก้ไขข้อมูลความปลอดภัย
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <label for="current_password" class="form-label fw-semibold">รหัสผ่านปัจจุบัน <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-key text-muted"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="current_password" name="current_password" 
+                                                    placeholder="กรอกรหัสผ่านปัจจุบันเพื่อยืนยัน">
+                                            <div class="invalid-feedback">กรุณากรอกรหัสผ่านปัจจุบันของคุณ</div>
+                                        </div>
+                                        <div class="form-text text-danger">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            ต้องกรอกทุกครั้งที่ต้องการบันทึกการเปลี่ยนแปลง
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label for="password" class="form-label fw-semibold">รหัสผ่านใหม่</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-lock text-muted"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="password" name="password" 
+                                                    placeholder="เว้นว่างหากไม่ต้องการเปลี่ยน">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            ใส่รหัสผ่านใหม่หากต้องการเปลี่ยนแปลง (อย่างน้อย 8 ตัวอักษร)
+                                        </div>
+                                        <div class="password-strength mt-2" style="display: none;">
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar" id="passwordStrengthBar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <small class="text-muted" id="passwordStrengthText">ความแข็งแกร่งของรหัสผ่าน</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions d-flex flex-wrap gap-3 justify-content-between">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="saveBtn">
+                                        <i class="bi bi-save me-2"></i>บันทึกการเปลี่ยนแปลง
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary btn-lg">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>รีเซ็ต
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg">
+                                        <i class="bi bi-house me-2"></i>กลับหน้าแรก
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                        <i class="bi bi-trash me-2"></i>ลบบัญชี
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="not-logged-in text-center py-5">
+                             <div class="not-logged-icon bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="bi bi-x-octagon text-danger" style="font-size: 3rem;"></i>
+                            </div>
+                            <h4 class="fw-bold text-danger mb-3">คุณยังไม่ได้เข้าสู่ระบบ</h4>
+                            <p class="text-muted mb-4">กรุณาเข้าสู่ระบบเพื่อจัดการข้อมูลส่วนตัวของคุณ</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg"><i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title fw-bold" id="deleteAccountModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>ลบบัญชี
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="warning-icon bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    </div>
+                    <h6 class="fw-bold mb-2">คุณแน่ใจหรือไม่?</h6>
+                    <p class="text-muted">
+                        การลบบัญชีจะไม่สามารถย้อนกลับได้ ข้อมูลทั้งหมดของคุณจะถูกลบอย่างถาวร
+                    </p>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <h6 class="fw-bold mb-2">ข้อมูลที่จะถูกลบ:</h6>
+                    <ul class="mb-0">
+                        <li>ข้อมูลส่วนตัวทั้งหมด</li>
+                        <li>ประวัติการสั่งซื้อ</li>
+                        <li>ข้อมูลการเงิน</li>
+                        <li>การตั้งค่าต่างๆ</li>
+                    </ul>
+                </div>
+                
+                <div id="deleteAccountFormWrapper">
+                    <div class="mb-3">
+                        <label for="confirmEmail" class="form-label fw-semibold">
+                            ยืนยันการลบโดยพิมพ์อีเมลของคุณ:
+                        </label>
+                        <input type="email" class="form-control" id="confirmEmail" name="confirmEmail"
+                               placeholder="{{ session.email if session.loggedin else 'your@email.com' }}" required>
+                        <div class="invalid-feedback">
+                            กรุณากรอกอีเมลที่ถูกต้อง
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label fw-semibold">
+                            รหัสผ่านปัจจุบันเพื่อยืนยัน:
+                        </label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                        <div class="invalid-feedback">
+                            กรุณากรอกรหัสผ่านปัจจุบัน
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-outline-danger" id="confirmDeleteBtn" disabled>
+                    <i class="bi bi-trash me-2"></i>ลบบัญชีถาวร
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ... (CSS ส่วน Style ยังคงเดิม) ... */
+    .profile-section {
+        min-height: 100vh;
+        padding-top: 2rem;
+    }
+    
+    .profile-sidebar-card,
+    .profile-content-card {
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .profile-sidebar-card:hover,
+    .profile-content-card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-avatar {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .profile-form .form-control:focus,
+    .profile-form .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+    
+    .form-section {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1.5rem;
+        margin-left: 0.5rem;
+    }
+    
+    .stat-item:hover {
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+    }
+    
+    .quick-actions .btn:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+    
+    .security-info {
+        border-left: 4px solid var(--success-color);
+    }
+    
+    .password-strength .progress-bar {
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength .progress-bar.weak {
+        background-color: #dc3545;
+    }
+    
+    .password-strength .progress-bar.medium {
+        background-color: #ffc107;
+    }
+    
+    .password-strength .progress-bar.strong {
+        background-color: #198754;
+    }
+    
+    .not-logged-icon {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .warning-icon {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // SCRIPT TO MANAGE SECURITY FIELDS VISIBILITY
+    (function() {
+        'use strict';
+        const enableSecurityBtn = document.getElementById('enableSecurityEditBtn');
+        const securityFieldsContainer = document.getElementById('securityFields');
+        const emailInput = document.getElementById('email');
+        const currentPasswordInput = document.getElementById('current_password');
+
+        if (enableSecurityBtn) {
+            enableSecurityBtn.addEventListener('click', function() {
+                securityFieldsContainer.style.display = 'block';
+                emailInput.readOnly = false;
+                currentPasswordInput.required = true;
+                this.style.display = 'none';
+                currentPasswordInput.focus();
+            });
+        }
+    })();
+
+
+    // Enhanced form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            const forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        if (form.classList.contains('profile-form')) {
+                            const saveBtn = document.getElementById('saveBtn');
+                            // const originalText = saveBtn.innerHTML; // เก็บไว้สำหรับใช้ในอนาคต
+                            saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>กำลังบันทึก...';
+                            saveBtn.disabled = true;
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.className = 'bi bi-eye-slash';
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.className = 'bi bi-eye';
+        }
+    });
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        const checks = [
+            password.length >= 8,
+            /[a-z]/.test(password),
+            /[A-Z]/.test(password),
+            /[0-9]/.test(password),
+            /[^A-Za-z0-9]/.test(password)
+        ];
+        
+        strength = checks.filter(Boolean).length;
+        return strength;
+    }
+
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strengthContainer = document.querySelector('.password-strength');
+        
+        if (password.length > 0) {
+            strengthContainer.style.display = 'block';
+            
+            const strength = checkPasswordStrength(password);
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            
+            const percentage = (strength / 5) * 100;
+            strengthBar.style.width = percentage + '%';
+            
+            strengthBar.className = 'progress-bar';
+            if (strength <= 2) {
+                strengthBar.classList.add('weak');
+                strengthText.textContent = 'รหัสผ่านอ่อน';
+                strengthText.className = 'text-danger small';
+            } else if (strength <= 3) {
+                strengthBar.classList.add('medium');
+                strengthText.textContent = 'รหัสผ่านปานกลาง';
+                strengthText.className = 'text-warning small';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthText.textContent = 'รหัสผ่านแข็งแกร่ง';
+                strengthText.className = 'text-success small';
+            }
+        } else {
+            strengthContainer.style.display = 'none';
+        }
+    });
+
+    // Enhanced email validation
+    document.getElementById('email').addEventListener('input', function() {
+        const email = this.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailRegex.test(email)) {
+            this.setCustomValidity('กรุณากรอกอีเมลที่ถูกต้อง');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // 💡 MODIFIED DELETE ACCOUNT SCRIPT TO USE FETCH/JSON 💡
+    const confirmEmailInput = document.getElementById('confirmEmail');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const currentEmail = '{{ session.email if session.loggedin else "" }}';
+
+    function validateDeleteForm() {
+        // ตรวจสอบว่าอีเมลที่กรอกตรงกับอีเมลของผู้ใช้ปัจจุบันหรือไม่ (แบบ case-sensitive)
+        const emailMatch = confirmEmailInput.value === currentEmail;
+        // ตรวจสอบว่าได้กรอกรหัสผ่านปัจจุบันแล้วหรือไม่
+        const passwordFilled = confirmPasswordInput.value.length > 0;
+
+        if (emailMatch && passwordFilled) {
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.classList.remove('btn-outline-danger');
+            confirmDeleteBtn.classList.add('btn-danger');
+        } else {
+            confirmDeleteBtn.disabled = true;
+            confirmDeleteBtn.classList.remove('btn-danger');
+            confirmDeleteBtn.classList.add('btn-outline-danger');
+        }
+    }
+
+    // เพิ่ม event listener สำหรับการตรวจสอบความถูกต้องของฟอร์ม Modal
+    confirmEmailInput.addEventListener('input', validateDeleteForm);
+    confirmPasswordInput.addEventListener('input', validateDeleteForm);
+
+    // 🚨 สำคัญ: เปลี่ยนจากการส่งฟอร์มเป็นการส่ง JSON ผ่าน Fetch API
+    confirmDeleteBtn.addEventListener('click', function() {
+        // ตรวจสอบความถูกต้องก่อนส่ง
+        if (confirmDeleteBtn.disabled) return;
+
+        // อัปเดตสถานะปุ่ม
+        const originalText = confirmDeleteBtn.innerHTML;
+        confirmDeleteBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>กำลังลบ...';
+        confirmDeleteBtn.disabled = true;
+
+        const password = confirmPasswordInput.value;
+        const deleteURL = "{{ url_for('delete_account') }}";
+
+        fetch(deleteURL, {
+            method: 'POST',
+            // 🔑 กำหนด Content-Type เพื่อให้ Flask รับรู้ว่าเป็น JSON
+            headers: {
+                'Content-Type': 'application/json' 
+            },
+            // 🔑 แปลงข้อมูลรหัสผ่านเป็น JSON string
+            body: JSON.stringify({
+                'password': password 
+            })
+        })
+        .then(response => {
+            // อ่าน response JSON
+            return response.json().then(data => ({
+                status: response.status,
+                body: data
+            }));
+        })
+        .then(result => {
+            // ซ่อน modal
+            const modalInstance = bootstrap.Modal.getInstance(deleteAccountModal);
+            if (modalInstance) modalInstance.hide();
+            
+            if (result.body.status === 'success') {
+                alert('สำเร็จ: ' + result.body.message);
+                // Redirect ไปที่หน้า login หรือหน้าหลัก
+                window.location.href = '{{ url_for("login") }}'; 
+            } else {
+                alert('การล้มเหลว: ' + result.body.message);
+                // คืนค่าปุ่มหากล้มเหลว
+                confirmDeleteBtn.innerHTML = originalText;
+                confirmDeleteBtn.disabled = false;
+                validateDeleteForm(); // เรียกอีกครั้งเพื่อคืนค่าสถานะปุ่ม
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์เพื่อลบบัญชีได้');
+            confirmDeleteBtn.innerHTML = originalText;
+            confirmDeleteBtn.disabled = false;
+            validateDeleteForm();
+        });
+    });
+    // END MODIFIED DELETE ACCOUNT SCRIPT 
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) {
+                saveBtn.click();
+            }
+        }
+        
+        if (e.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal.show');
+            openModals.forEach(modal => {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            });
+        }
+    });
+
+    // Form change detection
+    let formChanged = false;
+    document.querySelectorAll('.profile-form input, .profile-form select, .profile-form textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            formChanged = true;
+        });
+    });
+
+    // Warn before leaving if form has changes
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // Reset form change detection on submit
+    document.querySelector('.profile-form').addEventListener('submit', function() {
+        formChanged = false;
+    });
+
+    // Animate stats on scroll
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statItems = entry.target.querySelectorAll('.stat-item h5');
+                statItems.forEach((stat, index) => {
+                    setTimeout(() => {
+                        stat.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            stat.style.transform = 'scale(1)';
+                        }, 200);
+                    }, index * 100);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    const profileStats = document.querySelector('.profile-stats');
+    if (profileStats) {
+        observer.observe(profileStats);
+    }
+</script>
+{% endblock %}

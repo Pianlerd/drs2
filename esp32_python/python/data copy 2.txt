@@ -1,0 +1,259 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+#include <HTTPClient.h>
+#include <U8g2lib.h>  // Include the U8g2 library for OLED
+
+// Replace with your network credentials
+const char* ssid = "Galaxy Note10+306b";
+const char* password = "";
+
+// Define the GPIO pins connected to the servo motors
+const int servoPins[] = { 12, 13, 14, 26, 27 };
+const int NUM_SERVOS = sizeof(servoPins) / sizeof(servoPins[0]);
+
+// Create an array of Servo objects
+Servo myServos[NUM_SERVOS];
+
+// Variables for smooth servo movement (non-blocking)
+int currentServoAngles[NUM_SERVOS];
+int targetServoAngles[NUM_SERVOS];
+bool isServoMoving[NUM_SERVOS];
+unsigned long servoMoveStartTime[NUM_SERVOS];
+const unsigned long SERVO_MOVE_DURATION = 5000;
+
+WebServer server(80);
+
+// Define IR sensor pin and counter variable
+#define IR_SENSOR_PIN 32
+int count = 0;
+bool objectDetected = false;
+
+// Flask Server IP
+const char* flask_ip = "192.168.114.23";
+
+// OLED display setup
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0);
+
+// Function prototypes
+void handleRoot();
+void handleServo(int servoIndex, int state);
+void handleNotFound();
+void updateServoPositions();
+void sendResetCommandToFlask();
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize OLED display
+  u8g2.begin();
+  u8g2.setFont(u8g2_font_ncenB08_tr);
+  u8g2.clearBuffer();
+  u8g2.drawStr(0, 12, "Starting...");
+  u8g2.sendBuffer();
+
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  // Initialize servo motors and set initial position
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    myServos[i].attach(servoPins[i], 500, 2500);
+    myServos[i].write(0);
+    currentServoAngles[i] = 0;
+    targetServoAngles[i] = 0;
+    isServoMoving[i] = false;
+    Serial.print("Servo on GPIO ");
+    Serial.print(servoPins[i]);
+    Serial.println(" initialized to 0 degrees.");
+  }
+
+  // Set IR sensor pin as input
+  pinMode(IR_SENSOR_PIN, INPUT);
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 20) {
+    delay(500);
+    Serial.print(".");
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    for (int i = 0; i < NUM_SERVOS; i++) {
+      String pathOn = "/servo" + String(servoPins[i]) + "/on";
+      String pathOff = "/servo" + String(servoPins[i]) + "/off";
+
+      server.on(pathOn.c_str(), HTTP_GET, [=]() {
+        handleServo(i, HIGH);
+      });
+      server.on(pathOff.c_str(), HTTP_GET, [=]() {
+        handleServo(i, LOW);
+      });
+    }
+
+    server.on("/", HTTP_GET, handleRoot);
+    server.onNotFound(handleNotFound);
+
+    // Endpoint for OLED display
+    server.on("/oled", HTTP_POST, []() {
+      String payload = server.arg("plain");
+      u8g2.clearBuffer();
+      u8g2.setFont(u8g2_font_ncenB08_tr);
+      int y = 12;
+      int line_start = 0;
+      int line_count = 0;
+
+      for (int i = 0; i < payload.length() && line_count < 5; i++) {
+        if (payload.charAt(i) == '\n') {
+          String line = payload.substring(line_start, i);
+          if (line.length() > 20) {
+            line = line.substring(0, 20);  // Truncate line
+          }
+          u8g2.drawStr(0, y, line.c_str());
+          y += 12;
+          line_start = i + 1;
+          line_count++;
+        }
+      }
+      // Draw the last line if it exists and we haven't exceeded 5 lines
+      if (line_count < 5) {
+        String last_line = payload.substring(line_start);
+        if (last_line.length() > 20) {
+          last_line = last_line.substring(0, 20);  // Truncate last line
+        }
+        u8g2.drawStr(0, y, last_line.c_str());
+      }
+      u8g2.sendBuffer();
+      server.send(200, "text/plain", "OLED updated");
+    });
+
+    server.begin();
+    Serial.println("HTTP server started.");
+  } else {
+    Serial.println("\nFailed to connect to WiFi. Please check credentials and try again.");
+  }
+}
+
+void loop() {
+  server.handleClient();
+  updateServoPositions();
+
+  int sensorValue = digitalRead(IR_SENSOR_PIN);
+  if (sensorValue == LOW && !objectDetected) {
+    count++;
+    objectDetected = true;
+    Serial.print("Count: ");
+    Serial.println(count);
+    Serial.println("Sensor triggered! Sending reset command to Flask.");
+    sendResetCommandToFlask();
+  } else if (sensorValue == HIGH && objectDetected) {
+    objectDetected = false;
+  }
+}
+
+void handleRoot() {
+  String html = "<html><body><h1>ESP32 Servo Control</h1>";
+  html += "<p>Connected to WiFi: " + String(ssid) + "</p>";
+  html += "<p>IP Address: " + WiFi.localIP().toString() + "</p>";
+  html += "<h2>Control Servos:</h2><ul>";
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    html += "<li>Servo on GPIO " + String(servoPins[i]) + ": ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/on'>ON (60 deg)</a> | ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/off'>OFF (0 deg)</a>";
+    html += "</li>";
+  }
+  html += "</ul></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleServo(int servoIndex, int state) {
+  int targetAngle;
+  String stateStr;
+
+  if (state == HIGH) {
+    targetAngle = 60;
+    stateStr = "ON (60 degrees)";
+  } else {
+    targetAngle = 0;
+    stateStr = "OFF (0 degrees)";
+  }
+
+  targetServoAngles[servoIndex] = targetAngle;
+  servoMoveStartTime[servoIndex] = millis();
+  isServoMoving[servoIndex] = true;
+
+  Serial.print("Servo on GPIO ");
+  Serial.print(servoPins[servoIndex]);
+  Serial.print(" command: ");
+  Serial.println(stateStr);
+  server.send(200, "text/plain", "Servo " + String(servoPins[servoIndex]) + " command: " + stateStr);
+}
+
+void updateServoPositions() {
+  unsigned long currentTime = millis();
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (isServoMoving[i]) {
+      unsigned long elapsedTime = currentTime - servoMoveStartTime[i];
+      if (elapsedTime < SERVO_MOVE_DURATION) {
+        float progress = (float)elapsedTime / SERVO_MOVE_DURATION;
+        int startAngle = currentServoAngles[i];
+        int newAngle = startAngle + (int)((targetServoAngles[i] - startAngle) * progress);
+
+        myServos[i].write(newAngle);
+        currentServoAngles[i] = newAngle;
+      } else {
+        myServos[i].write(targetServoAngles[i]);
+        currentServoAngles[i] = targetServoAngles[i];
+        isServoMoving[i] = false;
+        Serial.print("Servo on GPIO ");
+        Serial.print(servoPins[i]);
+        Serial.print(" reached target angle: ");
+        Serial.println(targetServoAngles[i]);
+      }
+    }
+  }
+}
+
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  Serial.println(message);
+}
+
+void sendResetCommandToFlask() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String serverPath = "http://" + String(flask_ip) + ":5000/sensor_reset";
+    http.begin(serverPath.c_str());
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+      Serial.printf("[HTTP] GET... code: %d\n", httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected, cannot send reset command.");
+  }
+}

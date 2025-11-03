@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการ Bin และควบคุม Servo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the application */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            color: #1a202c;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        h2 {
+            color: #1a202c;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        /* Flash message styling for success and danger alerts */
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .flash-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        /* Form group styling */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+        }
+        /* Button styling */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #4299e1;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #3182ce;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background-color: #f59e0b;
+            color: white;
+            border: none;
+        }
+        .btn-warning:hover {
+            background-color: #d97706;
+            transform: translateY(-1px);
+        }
+
+        /* Table styles for both sections (Servo and Order) */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 2rem;
+            background-color: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        th, td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #edf2f7;
+            color: #2d3748;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tbody tr:hover {
+            background-color: #f7fafc;
+        }
+        .action-buttons button {
+            margin-right: 0.5rem;
+        }
+
+        /* Specific styles for Servo control table buttons */
+        .servo-table .on {
+            background-color: #28a745;
+            color: white;
+        }
+        .servo-table .off {
+            background-color: #dc3545;
+            color: white;
+        }
+        .servo-table button {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .servo-table button:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+<!--       <script>
+    async function fetchState() {
+      let response = await fetch("/get_state");
+      let data = await response.json();
+      document.getElementById("state").innerText = data.button_state;
+      
+    }
+    
+    setInterval(fetchState, 1000);
+  </script> -->
+</head>
+<body>
+<p>
+    Button state: <span id="button_state">{{ button_state }}</span>
+    <a href="{{ url_for('bin', action='reset_search') }}"
+       id="reset-search-btn"
+       class="btn btn-danger"
+       style="margin-left: 10px;">
+       รีเซ็ต
+    </a>
+</p>
+
+<script>
+    let lastState = "released"; // เริ่มต้นจาก released
+
+    async function fetchState() {
+        try {
+            const response = await fetch("/get_state");
+            const data = await response.json();
+            const currentState = data.button_state;
+
+            // อัปเดตข้อความบนหน้า
+            document.getElementById("button_state").innerText = currentState;
+
+            // ถ้าค่าเปลี่ยนจาก released → pressed ให้ trigger รีเซ็ต
+            if (lastState === "released" && currentState === "pressed") {
+                console.log("Button pressed! Triggering reset...");
+
+                // คลิกปุ่มแดงเหมือนกดด้วยมือ
+                document.getElementById("reset-search-btn").click();
+            }
+
+            lastState = currentState; // เก็บค่าปัจจุบันไว้เทียบรอบต่อไป
+        } catch (error) {
+            console.error("Error fetching state:", error);
+        }
+    }
+
+    // ตรวจสอบทุก 1 วินาที
+    setInterval(fetchState, 1000);
+</script>
+<!-- Input สำหรับรับ Barcode จาก USB scanner -->
+<input type="text" id="barcodeInput" autofocus style="opacity:0; position:absolute;"/>
+
+
+    <div class="container">
+        <h1>จัดการ Bin และควบคุม Servo</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="mb-10 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">ควบคุม Servo</h2>
+            {% if servo_data %}
+            <div class="overflow-x-auto">
+                <table class="servo-table">
+                    <thead>
+                        <tr>
+                            <th>Servo ขา</th>
+                            <th>สถานะ</th>
+                            <th>สลับสถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, value in servo_data.items() %}
+                        <tr>
+                            <td>{{ id }}</td>
+                            <td>{{ 'เปิด (30°)' if value == 1 else 'ปิด (0°)' }}</td>
+                            <td>
+                                <form action="{{ url_for('toggle_servo', servo_id=id) }}" method="post">
+                                    <button class="{{ 'on' if value == 0 else 'off' }}" type="submit">
+                                        {{ 'เปิด (หมุน 30°)' if value == 0 else 'ปิด (หมุน 0°)' }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-6 flex justify-center space-x-4">
+                <form action="{{ url_for('bin') }}" method="post" class="text-center">
+                    <input type="hidden" name="action" value="reset_all_servos">
+                    <button type="submit" class="btn btn-danger">
+                        รีเซ็ต Servo (category_id 1-5) เป็น 0°
+                    </button>
+                </form>
+                <button type="button" class="btn btn-warning" id="refresh-page-btn">
+                    รีเซ็ตหน้าเว็บ (Refresh) 🔄
+                </button>
+            </div>
+            {% else %}
+                <p class="no-data">ไม่พบข้อมูล Servo หรือเกิดข้อผิดพลาดในการเชื่อมต่อ.</p>
+            {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="p-6 bg-gray-50 rounded-lg shadow-inner">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">ค้นหารายการสินค้า</h2>
+                <form id="search-form" action="{{ url_for('bin') }}" method="get" class="space-y-4">
+                    <div class="form-group">
+                        <label for="barcode_id_filter_input" class="block text-sm">รหัสบาร์โค้ด:</label>
+                        <input type="text" id="barcode_id_filter_input" name="barcode_id_filter"
+                                value="{{ barcode_id_filter }}"
+                                placeholder="กรอกรหัสบาร์โค้ด"
+                                autofocus="autofocus"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="submit" name="action" value="search"
+                                class="btn btn-primary flex-1">
+                            ค้นหา
+                        </button>
+                        <a href="{{ url_for('bin', action='reset_search') }}" 
+                            id="reset-search-btn"
+                            class="btn btn-danger flex-1 text-center" 
+                            style="display: flex; align-items: center; justify-content: center;">
+                            รีเซ็ต
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-lg shadow-inner">
+                <h2 class="text-xl font-semibold mb-4 text-gray-700">เพิ่มจำนวนทิ้ง (+1)</h2>
+                <form id="add-disquantity-form" action="{{ url_for('bin') }}" method="post" class="space-y-4">
+                    <input type="hidden" name="action" value="add_disquantity">
+                    <div class="form-group">
+                        <label for="barcode_id_for_disquantity" class="block text-sm">รหัสบาร์โค้ด:</label>
+                        <input type="text" id="barcode_id_for_disquantity" name="barcode_id_for_disquantity"
+                                value="{{ request_form_data.get('barcode_id_for_disquantity', barcode_id_filter) }}"
+                                placeholder="รหัสบาร์โค้ดของสินค้า" required readonly
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 bg-gray-200">
+                    </div>
+                    <div class="form-group">
+                        <label for="products_id_to_disquantity" class="block text-sm">รหัสสินค้า:</label>
+                        <input type="number" id="products_id_to_disquantity" name="products_id_to_disquantity"
+                                value="{{ request_form_data.get('products_id_to_disquantity', '') }}"
+                                placeholder="รหัสสินค้าที่ต้องการเพิ่มจำนวนทิ้ง" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                    </div>
+                    <button type="submit" id="add-disquantity-btn" class="btn btn-success w-full">
+                        เพิ่มจำนวนทิ้ง (+1)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">รายการคำสั่งซื้อ</h2>
+        {% if orders %}
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>รหัสบาร์โค้ด</th>
+                            <th>ชื่อสินค้า</th>
+                            <th>รหัสสินค้า</th>
+                            <th>จำนวน</th>
+                            <th>จำนวนทิ้ง</th>
+                            <th>ราคา</th>
+                            <th>หมวดหมู่</th>
+                            <th>อีเมล</th>
+                            <th>วันที่สั่งซื้อ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.barcode_id }}</td>
+                            <td>{{ order.products_name }}</td>
+                            <td>{{ order.products_id }}</td>
+                            <td>{{ order.quantity }}</td>
+                            <td>{{ order.disquantity }}</td>
+                            <td>{{ order.price }}</td>
+                            <td>{{ order.category_id }}</td>
+                            <td>{{ order.email }}</td>
+                            <td>{{ order.order_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="no-data">
+                {% if barcode_id_filter %}
+                    ไม่พบรายการสินค้าสำหรับรหัสบาร์โค้ด "{{ barcode_id_filter }}"
+                {% else %}
+                    กรุณากรอกรหัสบาร์โค้ดเพื่อค้นหารายการสินค้า
+                {% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const barcodeInput = document.getElementById('barcode_id_filter_input');
+            const productsIdInput = document.getElementById('products_id_to_disquantity');
+            const searchForm = document.getElementById('search-form');
+            const addDisquantityForm = document.getElementById('add-disquantity-form');
+            
+            // 1. เพิ่มปุ่มรีเฟรชหน้าเว็บ (Refresh)
+            const refreshPageButton = document.getElementById('refresh-page-btn');
+            if (refreshPageButton) {
+                refreshPageButton.addEventListener('click', () => {
+                    // สั่งให้เบราว์เซอร์โหลดหน้าเว็บปัจจุบันซ้ำ
+                    window.location.reload(); 
+                });
+            }
+
+            // 2. Initial focus on barcode input when the page loads
+            if (barcodeInput) {
+                barcodeInput.focus();
+            }
+
+            // 3. Auto-submit search form when barcode input reaches 13 characters
+            if (barcodeInput) {
+                barcodeInput.addEventListener('input', () => {
+                    if (barcodeInput.value.length === 13) {
+                        searchForm.submit();
+                    }
+                });
+            }
+
+            // 4. Auto-focus on products_id_to_disquantity after a successful barcode search
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentBarcodeFilter = urlParams.get('barcode_id_filter');
+            if (currentBarcodeFilter && currentBarcodeFilter.length === 13) {
+                if (productsIdInput) {
+                    productsIdInput.focus();
+                }
+            }
+
+            // 5. Auto-submit "เพิ่มจำนวนทิ้ง (+1)" form when products_id_to_disquantity is entered
+            if (productsIdInput) {
+                productsIdInput.addEventListener('input', () => {
+                    // เพื่อความยืดหยุ่น ถ้ามีการกรอกอะไรเข้ามา ก็ส่งทันที
+                    if (productsIdInput.value.length > 0) { 
+                        addDisquantityForm.submit();
+                    }
+                });
+            }
+            
+            // 6. Prevent barcode_id_for_disquantity from being editable
+            const barcodeIdForDisquantityInput = document.getElementById('barcode_id_for_disquantity');
+            if (barcodeIdForDisquantityInput) {
+                barcodeIdForDisquantityInput.setAttribute('readonly', 'readonly');
+            }
+        });
+        const barcodeInput = document.getElementById('barcodeInput');
+const searchInput = document.getElementById('barcode_id_filter_input');
+const searchForm = document.getElementById('search-form');
+
+
+
+
+
+
+
+
+barcodeInput.addEventListener('input', function() {
+    const barcode = barcodeInput.value.trim();
+    if (barcode.length > 0) {
+        // ใส่ค่าเข้า search input
+        searchInput.value = barcode;
+        // ส่งฟอร์มค้นหาอัตโนมัติ
+        searchForm.submit();
+        barcodeInput.value = ''; // ล้างเพื่อรอสแกนถัดไป
+    }
+});
+
+// ให้ focus ตลอดเวลา
+window.addEventListener('load', () => barcodeInput.focus());
+window.addEventListener('click', () => barcodeInput.focus());
+
+    </script>
+    
+</body>
+</html>

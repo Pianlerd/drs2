@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ESP32 Button Monitor</title>
+  
+  <script>
+    async function fetchState() {
+      let response = await fetch("/get_state");
+      let data = await response.json();
+      document.getElementById("state").innerText = data.button_state;
+      
+    }
+    
+    setInterval(fetchState, 1000);
+  </script>
+</head>
+<body>
+  <h1>สถานะปุ่มจาก ESP32</h1>
+  <p>Button state: <span id="state">{{ state }}</span></p>
+  
+</body>
+</html>

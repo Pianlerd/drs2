@@ -1,0 +1,532 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+#include <SPI.h>
+
+// Network credentials
+const char* ssid = "Galaxy Note10+306b";
+const char* password = "";
+
+// Servo configuration
+const int servoPins[] = {12, 13, 14, 26, 27};
+const int NUM_SERVOS = sizeof(servoPins) / sizeof(servoPins[0]);
+
+Servo myServos[NUM_SERVOS];
+int currentServoAngles[NUM_SERVOS];
+int targetServoAngles[NUM_SERVOS];
+bool isServoMoving[NUM_SERVOS];
+unsigned long servoMoveStartTime[NUM_SERVOS];
+const unsigned long SERVO_MOVE_DURATION = 5000;
+
+WebServer server(80);
+
+// IR sensor configuration
+#define IR_SENSOR_PIN 32
+int count = 0;
+bool objectDetected = false;
+
+// Flask server IP
+const char* flask_ip = "192.168.52.23";
+
+// TFT display setup
+TFT_eSPI tft = TFT_eSPI();
+
+// Enhanced color palette for a "cyberpunk/hacker" look (Black, Green, Red)
+#define COLOR_BACKGROUND  0x0000 // Black
+#define COLOR_TEXT_GREEN  0x07E0 // Bright Green
+#define COLOR_TEXT_RED    0xF800 // Bright Red
+#define COLOR_ACCENT_BLUE 0x001F // Dark Blue accent for some elements
+#define COLOR_LIGHT_GREY  0xC618 // Light Grey for subtle details
+#define COLOR_DARK_GREY   0x4208 // Dark Grey for borders/shadows
+
+// Display dimensions
+const int SCREEN_WIDTH = 400;
+const int SCREEN_HEIGHT = 320;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize TFT with professional startup screen
+  initializeTFTDisplay();
+  
+  // Initialize servo motors
+  initializeServoMotors();
+  
+  // Initialize IR sensor
+  pinMode(IR_SENSOR_PIN, INPUT);
+  
+  // Connect to WiFi with visual feedback
+  connectToWiFi();
+  
+  // Setup web server routes
+  setupWebServer();
+}
+
+void loop() {
+  server.handleClient();
+  updateServoPositions();
+  handleIRSensor();
+}
+
+void initializeTFTDisplay() {
+  tft.init();
+  tft.setRotation(1); // Landscape mode
+  
+  // Professional startup animation
+  showSplashScreen();
+  delay(1500);
+}
+
+void showSplashScreen() {
+  tft.fillScreen(COLOR_BACKGROUND); // Black background
+
+  // "Hacker" style grid background animation
+  for (int i = 0; i < SCREEN_WIDTH; i += 20) {
+    tft.drawFastVLine(i, 0, SCREEN_HEIGHT, COLOR_DARK_GREY);
+  }
+  for (int i = 0; i < SCREEN_HEIGHT; i += 20) {
+    tft.drawFastHLine(0, i, SCREEN_WIDTH, COLOR_DARK_GREY);
+  }
+  
+  // Main title with glitch effect
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(3);
+  tft.drawCentreString("SECURE SYSTEM", SCREEN_WIDTH/2 + 1, 50 + 1, 4); // Shadow
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.drawCentreString("SECURE SYSTEM", SCREEN_WIDTH/2, 50, 4);
+
+  // Random glitch text lines
+  tft.setTextSize(1);
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.drawString("INITIATING PROTOCOL X-7B", 20, 100, 2);
+  tft.drawString("ENCRYPTED ACCESS REQUIRED", 20, 120, 2);
+  tft.drawString("AWAITING AUTHENTICATION...", 20, 140, 2);
+
+  // Loading animation with "binary" style
+  drawLoadingBar();
+}
+
+void drawLoadingBar() {
+  int barWidth = 250;
+  int barHeight = 12;
+  int barX = (SCREEN_WIDTH - barWidth) / 2;
+  int barY = 200;
+  
+  // Background bar with dark border
+  tft.drawRoundRect(barX, barY, barWidth, barHeight, 4, COLOR_DARK_GREY);
+  
+  // Animated loading with binary-like segments
+  for (int i = 0; i <= 100; i += 5) {
+    int progressWidth = map(i, 0, 100, 0, barWidth - 4);
+    if (progressWidth > 0) {
+      tft.fillRect(barX + 2, barY + 2, progressWidth, barHeight - 4, COLOR_TEXT_GREEN);
+    }
+    
+    // Progress text with "decryption" feel
+    tft.fillRect(barX, barY + 20, 150, 20, COLOR_BACKGROUND);
+    tft.setTextColor(COLOR_LIGHT_GREY);
+    tft.drawString("DECRYPTING DATA: " + String(i) + "%", barX, barY + 25, 2);
+    
+    delay(80);
+  }
+}
+
+void initializeServoMotors() {
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    myServos[i].attach(servoPins[i], 500, 2500);
+    myServos[i].write(0);
+    currentServoAngles[i] = 0;
+    targetServoAngles[i] = 0;
+    isServoMoving[i] = false;
+    Serial.print("Servo on GPIO ");
+    Serial.print(servoPins[i]);
+    Serial.println(" initialized to 0 degrees.");
+  }
+}
+
+void connectToWiFi() {
+  showConnectingScreen();
+  
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 20) {
+    delay(500);
+    Serial.print(".");
+    updateConnectionProgress(retries);
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    showConnectedScreen();
+    setupWebServer(); // This line is redundant if called in setup(), but keeping it for safety
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    showErrorScreen("NETWORK OFFLINE!");
+    Serial.println("\nFailed to connect to WiFi.");
+  }
+}
+
+void showConnectingScreen() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  // Header bar
+  drawHeaderBar("NETWORK INTEGRITY CHECK");
+  
+  // Connection status with blinking cursor
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(2);
+  tft.drawCentreString("CONNECTING TO WLAN...", SCREEN_WIDTH/2, 100, 2);
+  
+  tft.setTextColor(COLOR_LIGHT_GREY);
+  tft.setTextSize(1);
+  tft.drawCentreString("SSID: " + String(ssid), SCREEN_WIDTH/2, 130, 2);
+}
+
+void updateConnectionProgress(int attempt) {
+  int dotCount = attempt % 4;
+  String dots = "";
+  for (int i = 0; i < dotCount; i++) {
+    dots += " .";
+  }
+  
+  tft.fillRect(0, 160, SCREEN_WIDTH, 30, COLOR_BACKGROUND);
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.drawCentreString("STATUS: ATTEMPTING CONNECTION" + dots, SCREEN_WIDTH/2, 170, 2);
+}
+
+void showConnectedScreen() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  // Header bar
+  drawHeaderBar("NETWORK ONLINE");
+  
+  // Success indicator (using simple '>>>' or 'OK')
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(3);
+  tft.drawCentreString("ACCESS GRANTED", SCREEN_WIDTH/2, 80, 4); // Larger "access granted"
+
+  // Connection details in "console" style
+  tft.setTextColor(COLOR_LIGHT_GREY);
+  tft.setTextSize(1);
+  tft.drawCentreString("IP: " + WiFi.localIP().toString(), SCREEN_WIDTH/2, 130, 2);
+  tft.drawCentreString("SERVER: ACTIVE ON PORT 80", SCREEN_WIDTH/2, 150, 2);
+  
+  // Status indicators (simplified for this screen)
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.drawString("[OK] WIFI INTERFACE", 20, 180, 2);
+  tft.drawString("[OK] WEB SERVER", 20, 200, 2);
+  
+  delay(2000);
+  showMainDashboard();
+}
+
+void showErrorScreen(String message) {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  // Header bar
+  drawHeaderBar("CRITICAL ERROR");
+  
+  // Error icon (large 'X')
+  tft.setTextColor(COLOR_TEXT_RED);
+  tft.setTextSize(5);
+  tft.drawCentreString("X", SCREEN_WIDTH/2, 80, 4);
+  
+  tft.setTextColor(COLOR_TEXT_RED);
+  tft.setTextSize(2);
+  tft.drawCentreString(message, SCREEN_WIDTH/2, 160, 2);
+  
+  tft.setTextSize(1);
+  tft.drawCentreString("SYSTEM OFFLINE. RETRY.", SCREEN_WIDTH/2, 190, 2);
+}
+
+void showMainDashboard() {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  // Header
+  drawHeaderBar("SYSTEM OVERVIEW");
+  
+  // System info panel with more data-like display
+  drawInfoPanel(10, 50, 185, 120, "CORE STATUS", COLOR_DARK_GREY); // Wider panel for more info
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("SYS_STATUS: ONLINE", 20, 70, 2);
+  tft.drawString("SERVO_UNITS: " + String(NUM_SERVOS), 20, 90, 2);
+  tft.drawString("IR_TRIGGERS: " + String(count), 20, 110, 2);
+  tft.drawString("CPU_TEMP: 45C (EST)", 20, 130, 2);
+
+  // Network info panel
+  drawInfoPanel(205, 50, 185, 120, "NETWORK LOGS", COLOR_DARK_GREY);
+  tft.setTextColor(COLOR_LIGHT_GREY);
+  tft.drawString("WLAN: CONNECTED", 215, 70, 2);
+  tft.drawString("IP_ADDR: " + WiFi.localIP().toString(), 215, 90, 2);
+  tft.drawString("SERVER: ACTIVE", 215, 110, 2);
+  tft.drawString("FLASK_IP: " + String(flask_ip), 215, 130, 2); // Show Flask IP
+
+  // Servo Status Monitor Panel
+  drawInfoPanel(10, 180, SCREEN_WIDTH - 20, 100, "SERVO MONITOR", COLOR_DARK_GREY);
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  for(int i = 0; i < NUM_SERVOS; i++) {
+    String servoStatus = "S" + String(i+1) + " (GPIO" + String(servoPins[i]) + "): " + String(currentServoAngles[i]) + " deg";
+    tft.drawString(servoStatus, 20 + (i % 3) * 120, 200 + (i / 3) * 20, 2); // Arrange up to 3 servos per row
+  }
+  
+  // Status bar at bottom
+  drawStatusBar();
+}
+
+void setupWebServer() {
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    String pathOn = "/servo" + String(servoPins[i]) + "/on";
+    String pathOff = "/servo" + String(servoPins[i]) + "/off";
+
+    server.on(pathOn.c_str(), HTTP_GET, [=]() { handleServo(i, HIGH); });
+    server.on(pathOff.c_str(), HTTP_GET, [=]() { handleServo(i, LOW); });
+  }
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.onNotFound(handleNotFound);
+
+  // Enhanced OLED endpoint with professional display
+  server.on("/oled", HTTP_POST, [](){
+    String payload = server.arg("plain");
+    showCustomMessage(payload);
+    server.send(200, "text/plain", "TFT updated successfully");
+  });
+
+  server.begin();
+  Serial.println("HTTP server started.");
+}
+
+void showCustomMessage(String message) {
+  tft.fillScreen(COLOR_BACKGROUND);
+  
+  drawHeaderBar("INCOMING DATA STREAM");
+  
+  int panelX = 20;
+  int panelY = 60;
+  int panelW = SCREEN_WIDTH - 40;
+  int panelH = 200;
+  
+  // Panel background with a subtle border effect
+  tft.fillRoundRect(panelX, panelY, panelW, panelH, 8, COLOR_DARK_GREY);
+  tft.drawRoundRect(panelX, panelY, panelW, panelH, 8, COLOR_TEXT_GREEN); // Green border
+
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(2);
+  
+  int cursorY = panelY + 20;
+  int lineHeight = 25;
+  int currentPos = 0;
+  int prevPos = 0;
+  int lineNum = 0;
+
+  // Loop through the message to find newline characters
+  while (currentPos < message.length() && lineNum < 5) {
+    currentPos = message.indexOf('\n', prevPos);
+    String line;
+    if (currentPos == -1) {
+      line = message.substring(prevPos);
+    } else {
+      line = message.substring(prevPos, currentPos);
+    }
+
+    // Ensure line is trimmed to 20 characters (Python should pre-trim, but for safety)
+    if (line.length() > 20) {
+      line = line.substring(0, 20);
+    }
+    
+    // "Scrolling" text effect: use drawString for non-transparent background
+    tft.drawString(line, panelX + 10, cursorY, 2); 
+    cursorY += lineHeight;
+    prevPos = currentPos + 1;
+    lineNum++;
+
+    if (currentPos == -1) break;
+  }
+  
+  // Timestamp with "LOG_TIME" prefix
+  tft.setTextColor(COLOR_ACCENT_BLUE);
+  tft.setTextSize(1);
+  tft.drawString("LOG_TIME: " + String(millis() / 1000) + " SECONDS", panelX + 10, panelY + panelH - 20, 1);
+}
+
+void handleIRSensor() {
+  int sensorValue = digitalRead(IR_SENSOR_PIN);
+  if (sensorValue == LOW && !objectDetected) {
+    count++;
+    objectDetected = true;
+    
+    // Update display
+    updateCounterDisplay();
+    
+    Serial.print("Count: ");
+    Serial.println(count);
+    Serial.println("Sensor triggered! Sending reset command to Flask.");
+    sendResetCommandToFlask();
+  } else if (sensorValue == HIGH && objectDetected) {
+    objectDetected = false;
+  }
+}
+
+void updateCounterDisplay() {
+  // Update only the counter area on the main dashboard
+  // This assumes we are currently on the main dashboard
+  int x = 20;
+  int y = 110; // Corresponds to IR_TRIGGERS:
+  int w = 150; // Width of the text area
+  int h = 16;  // Height of the text area
+
+  tft.fillRect(x, y, w, h, COLOR_DARK_GREY); // Clear background for refresh
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("IR_TRIGGERS: " + String(count), x, y, 2);
+}
+
+// Helper drawing functions
+void drawHeaderBar(String title) {
+  tft.fillRect(0, 0, SCREEN_WIDTH, 40, COLOR_DARK_GREY); // Dark grey header bar
+  tft.drawFastHLine(0, 39, SCREEN_WIDTH, COLOR_TEXT_GREEN); // Green accent line
+
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(2);
+  tft.drawCentreString(title, SCREEN_WIDTH/2, 12, 2);
+}
+
+void drawInfoPanel(int x, int y, int w, int h, String title, uint16_t color) {
+  // Main panel with a subtle glow/border
+  tft.fillRoundRect(x, y, w, h, 5, color);
+  tft.drawRoundRect(x, y, w, h, 5, COLOR_TEXT_GREEN); // Green border
+  
+  // Title bar
+  tft.fillRoundRect(x + 2, y + 2, w - 4, 20, 3, COLOR_ACCENT_BLUE); // Dark blue accent
+  tft.setTextColor(COLOR_LIGHT_GREY); // Light grey title text
+  tft.setTextSize(1);
+  tft.drawCentreString(title, x + w/2, y + 6, 2);
+}
+
+void drawStatusBar() {
+  int barY = SCREEN_HEIGHT - 30;
+  tft.fillRect(0, barY, SCREEN_WIDTH, 30, COLOR_DARK_GREY);
+  tft.drawFastHLine(0, barY, SCREEN_WIDTH, COLOR_TEXT_RED); // Red accent line
+
+  // Status indicators with "system logs" look
+  tft.setTextColor(COLOR_TEXT_GREEN);
+  tft.setTextSize(1);
+  tft.drawString("[OK] WLAN", 10, barY + 8, 1);
+  tft.drawString("[ACTIVE] SERVER", 100, barY + 8, 1);
+  tft.drawString("[MONITORING] IR", 250, barY + 8, 1);
+  
+  // Uptime as a system clock
+  tft.setTextColor(COLOR_LIGHT_GREY);
+  tft.drawString("RUNTIME: " + String(millis() / 1000) + "s", SCREEN_WIDTH - 120, barY + 8, 1);
+}
+
+// Original functions maintained 100%
+void handleRoot() {
+  String html = "<html><body><h1>ESP32 Servo Control</h1>";
+  html += "<p>Connected to WiFi: " + String(ssid) + "</p>";
+  html += "<p>IP Address: " + WiFi.localIP().toString() + "</p>";
+  html += "<h2>Control Servos:</h2><ul>";
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    html += "<li>Servo on GPIO " + String(servoPins[i]) + ": ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/on'>ON (60 deg)</a> | ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/off'>OFF (0 deg)</a>";
+    html += "</li>";
+  }
+  html += "</ul></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleServo(int servoIndex, int state) {
+  int targetAngle;
+  String stateStr;
+  if (state == HIGH) {
+    targetAngle = 60;
+    stateStr = "ON (60 degrees)";
+  } else {
+    targetAngle = 0;
+    stateStr = "OFF (0 degrees)";
+  }
+
+  targetServoAngles[servoIndex] = targetAngle;
+  servoMoveStartTime[servoIndex] = millis();
+  isServoMoving[servoIndex] = true;
+
+  Serial.print("Servo on GPIO ");
+  Serial.print(servoPins[servoIndex]);
+  Serial.print(" command: ");
+  Serial.println(stateStr);
+  server.send(200, "text/plain", "Servo " + String(servoPins[servoIndex]) + " command: " + stateStr);
+}
+
+void updateServoPositions() {
+  unsigned long currentTime = millis();
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (isServoMoving[i]) {
+      unsigned long elapsedTime = currentTime - servoMoveStartTime[i];
+      if (elapsedTime < SERVO_MOVE_DURATION) {
+        float progress = (float)elapsedTime / SERVO_MOVE_DURATION;
+        int startAngle = currentServoAngles[i];
+        int newAngle = startAngle + (int)((targetServoAngles[i] - startAngle) * progress);
+
+        myServos[i].write(newAngle);
+        currentServoAngles[i] = newAngle;
+      } else {
+        myServos[i].write(targetServoAngles[i]);
+        currentServoAngles[i] = targetServoAngles[i];
+        isServoMoving[i] = false;
+        Serial.print("Servo on GPIO ");
+        Serial.print(servoPins[i]);
+        Serial.print(" reached target angle: ");
+        Serial.println(targetServoAngles[i]);
+      }
+    }
+  }
+}
+
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  Serial.println(message);
+}
+
+void sendResetCommandToFlask() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String serverPath = "http://" + String(flask_ip) + ":5000/sensor_reset";
+    http.begin(serverPath.c_str());
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) {
+      Serial.printf("[HTTP] GET... code: %d\n", httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected, cannot send reset command.");
+  }
+}

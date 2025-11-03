@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <form id="proxyForm" action="/existing_reset" method="POST" style="display:none;">
+        <input type="hidden" name="action" value="{{ value_to_send }}">
+    </form>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('proxyForm').submit();
+        });
+    </script>
+</body>
+</html>

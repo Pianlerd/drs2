@@ -1,0 +1,872 @@
+{% extends "base.html" %}
+
+{% block title %}สมัครสมาชิก - Trash For Coin | ระบบมัดจำบรรจุภัณฑ์ขยะเพื่อสิ่งแวดล้อมที่ยั่งยืน{% endblock %}
+
+{% block content %}
+<!-- Enhanced Registration Section -->
+<section class="register-section py-5 position-relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="register-background position-absolute w-100 h-100" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); opacity: 0.8;"></div>
+   <div class="register-pattern position-absolute w-100 h-100" style="background-image: url('data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Cdefs%3E%3Cpattern id%3D%22grid%22 width%3D%2220%22 height%3D%2220%22 patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath d%3D%22M 20 0 L 0 0 0 20%22 fill%3D%22none%22 stroke%3D%22rgba(5%2C150%2C105%2C0.05)%22 stroke-width%3D%221%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect width%3D%22100%22 height%3D%22100%22 fill%3D%22url(%23grid)%22%2F%3E%3C%2Fsvg%3E'); opacity: 0.5;"></div>
+   
+    <div class="container position-relative">
+        <div class="row justify-content-center py-5">
+            <div class="col-lg-8 col-xl-7">
+                <div class="register-card card shadow-xl border-0">
+                    <!-- Card Header -->
+                    <div class="card-header bg-gradient text-white text-center border-0 p-5" 
+                         style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                        <div class="register-icon bg-white bg-opacity-20 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                             style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-plus text-white" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="fw-bold mb-2">เข้าร่วมกับเรา</h2>
+                        <p class="mb-0 text-white-50">สมัครสมาชิก Trash For Coin ฟรี</p>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="card-body p-5">
+                        <!-- Flash Messages -->
+                        {% if msg %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            {{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ปิด"></button>
+                        </div>
+                        {% endif %}
+
+                        <!-- User Type Selection -->
+                        <div class="user-type-selection mb-5">
+                            <h5 class="fw-bold text-center mb-4">เลือกประเภทการใช้งาน</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="user-type-card card border-2 h-100" id="viewerCard" style="cursor: pointer; border-color: var(--primary-color);">
+                                        <div class="card-body text-center p-4">
+                                            <div class="user-type-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                                 style="width: 80px; height: 80px;">
+                                                <i class="bi bi-eye text-info" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-2">Viewer</h6>
+                                            <p class="text-muted small mb-3">
+                                                เยี่ยมชมเว็บไซต์<br>
+                                                ดูข้อมูลสินค้าและบริการ
+                                            </p>
+                                            <div class="form-check d-flex justify-content-center">
+                                                <input class="form-check-input" type="radio" name="user_type_radio" id="viewer_type" value="viewer" checked>
+                                                <label class="form-check-label fw-semibold" for="viewer_type">
+                                                    เลือกเป็น Viewer
+                                                </label>
+                                            </div>
+                                            <div class="user-type-features mt-3">
+                                                <div class="feature-item d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">ดูข้อมูลสินค้า</span>
+                                                </div>
+                                                <div class="feature-item d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">เรียนรู้เกี่ยวกับระบบ</span>
+                                                </div>
+                                                <div class="feature-item d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">ติดต่อสอบถาม</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="user-type-card card border-2 h-100" id="moderatorCard" style="cursor: pointer; border-color: var(--gray-300);">
+                                        <div class="card-body text-center p-4">
+                                            <div class="user-type-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                                 style="width: 80px; height: 80px;">
+                                                <i class="bi bi-shop text-warning" style="font-size: 2rem;"></i>
+                                            </div>
+                                            <h6 class="fw-bold mb-2">Moderator</h6>
+                                            <p class="text-muted small mb-3">
+                                                ลงทะเบียนในนามร้านค้า<br>
+                                                จัดการสินค้าและคำสั่งซื้อ
+                                            </p>
+                                            <div class="form-check d-flex justify-content-center">
+                                                <input class="form-check-input" type="radio" name="user_type_radio" id="moderator_type" value="moderator">
+                                                <label class="form-check-label fw-semibold" for="moderator_type">
+                                                    เลือกเป็น Moderator
+                                                </label>
+                                            </div>
+                                            <div class="user-type-features mt-3">
+                                                <div class="feature-item d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">จัดการสินค้า</span>
+                                                </div>
+                                                <div class="feature-item d-flex align-items-center justify-content-center mb-1">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">ระบบสแกนเนอร์</span>
+                                                </div>
+                                                <div class="feature-item d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-check-circle-fill text-success me-2 small"></i>
+                                                    <span class="small text-muted">รายงานการขาย</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Registration Form -->
+                        <form method="POST" id="registerForm" class="needs-validation register-form" novalidate>
+                            <input type="hidden" name="user_type" id="selected_user_type" value="viewer">
+                            
+                            <!-- Personal Information -->
+                            <div class="form-section mb-4">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-person me-2"></i>ข้อมูลส่วนตัว
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="firstname" class="form-label fw-semibold">ชื่อ <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-person text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="firstname" name="firstname" 
+                                                   placeholder="กรอกชื่อของคุณ" required>
+                                            <div class="invalid-feedback">กรุณากรอกชื่อ</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lastname" class="form-label fw-semibold">นามสกุล <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-person text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="lastname" name="lastname" 
+                                                   placeholder="กรอกนามสกุลของคุณ" required>
+                                            <div class="invalid-feedback">กรุณากรอกนามสกุล</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Account Information -->
+                            <div class="form-section mb-4">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-shield-lock me-2"></i>ข้อมูลบัญชี
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label fw-semibold">อีเมล <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-envelope text-muted"></i>
+                                            </span>
+                                            <input type="email" class="form-control" id="email" name="email" 
+                                                   placeholder="example@email.com" required>
+                                            <div class="invalid-feedback">กรุณากรอกอีเมลที่ถูกต้อง</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="password" class="form-label fw-semibold">รหัสผ่าน <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-lock text-muted"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="password" name="password" 
+                                                   placeholder="สร้างรหัสผ่าน" required>
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                            </button>
+                                            <div class="invalid-feedback">กรุณากรอกรหัสผ่าน</div>
+                                        </div>
+                                        <div class="password-strength mt-2">
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar" id="passwordStrengthBar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <small class="text-muted" id="passwordStrengthText">ความแข็งแกร่งของรหัสผ่าน</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <div class="col-12">
+                                        <label for="confirm_password" class="form-label fw-semibold">ยืนยันรหัสผ่าน <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-lock-fill text-muted"></i>
+                                            </span>
+                                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                                                   placeholder="ยืนยันรหัสผ่าน" required>
+                                            <div class="invalid-feedback">กรุณายืนยันรหัสผ่าน</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Moderator Fields (Hidden by default) -->
+                            <div id="moderatorFields" class="form-section mb-4" style="display: none;">
+                                <h6 class="fw-bold text-warning mb-3">
+                                    <i class="bi bi-shop me-2"></i>ข้อมูลร้านค้า
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="shop_name" class="form-label fw-semibold">ชื่อร้านค้า</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-shop text-muted"></i>
+                                            </span>
+                                            <input type="text" class="form-control" id="shop_name" name="shop_name" 
+                                                   placeholder="กรอกชื่อร้านค้า">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="phone" class="form-label fw-semibold">เบอร์โทรศัพท์</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="bi bi-telephone text-muted"></i>
+                                            </span>
+                                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                                   placeholder="08X-XXX-XXXX">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <div class="col-12">
+                                        <label for="address" class="form-label fw-semibold">ที่อยู่ร้านค้า</label>
+                                        <textarea class="form-control" id="address" name="address" rows="3" 
+                                                  placeholder="กรอกที่อยู่ร้านค้าของคุณ"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <label for="business_type" class="form-label fw-semibold">ประเภทธุรกิจ</label>
+                                        <select class="form-select" id="business_type" name="business_type">
+                                            <option value="">เลือกประเภทธุรกิจ</option>
+                                            <option value="convenience_store">ร้านสะดวกซื้อ</option>
+                                            <option value="supermarket">ซูเปอร์มาร์เก็ต</option>
+                                            <option value="restaurant">ร้านอาหาร</option>
+                                            <option value="cafe">ร้านกาแฟ</option>
+                                            <option value="retail">ร้านค้าปลีก</option>
+                                            <option value="grocery">ร้านขายของชำ</option>
+                                            <option value="other">อื่นๆ</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-warning mt-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-info-circle me-2 mt-1"></i>
+                                        <div>
+                                            <strong>หมายเหตุสำคัญ:</strong> การลงทะเบียนเป็น Moderator จะต้องผ่านการอนุมัติจากผู้ดูแลระบบ 
+                                            ข้อมูลจะถูกส่งไปยัง <strong>pianlerdpringpror@gmail.com</strong> เพื่อพิจารณา
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Conditions -->
+                            <div class="form-section mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        ฉันยอมรับ <a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#termsModal">ข้อกำหนดและเงื่อนไข</a> 
+                                        และ <a href="#" class="text-primary" data-bs-toggle="modal" data-bs-target="#privacyModal">นโยบายความเป็นส่วนตัว</a> 
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="invalid-feedback">
+                                        กรุณายอมรับข้อกำหนดและเงื่อนไข
+                                    </div>
+                                </div>
+                                
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
+                                    <label class="form-check-label" for="newsletter">
+                                        ฉันต้องการรับข่าวสารและข้อมูลอัปเดตจาก Trash For Coin
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid mb-4">
+                                <button type="submit" class="btn btn-primary btn-lg py-3" id="registerBtn">
+                                    <i class="bi bi-person-check me-2"></i>สมัครสมาชิก
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Divider -->
+                        <div class="divider d-flex align-items-center my-4">
+                            <div class="flex-grow-1 border-top"></div>
+                            <span class="px-3 text-muted small">หรือ</span>
+                            <div class="flex-grow-1 border-top"></div>
+                        </div>
+
+                        <!-- Login Link -->
+                        <div class="text-center">
+                            <p class="text-muted mb-3">มีบัญชีอยู่แล้ว?</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>เข้าสู่ระบบ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefits Card -->
+                <div class="benefits-card card border-0 shadow-sm mt-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-center mb-3">ประโยชน์ที่คุณจะได้รับ</h6>
+                        <div class="row g-3 text-center">
+                            <div class="col-4">
+                                <div class="benefit-item">
+                                    <i class="bi bi-shield-check text-success fs-4 mb-2"></i>
+                                    <p class="small text-muted mb-0">ปลอดภัย 100%</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="benefit-item">
+                                    <i class="bi bi-cash-coin text-warning fs-4 mb-2"></i>
+                                    <p class="small text-muted mb-0">สร้างรายได้</p>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="benefit-item">
+                                    <i class="bi bi-leaf text-success fs-4 mb-2"></i>
+                                    <p class="small text-muted mb-0">รักษ์โลก</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #059669 0%, #047857 100%);">
+                <h5 class="modal-title fw-bold" id="termsModalLabel">
+                    <i class="bi bi-file-text me-2"></i>ข้อกำหนดและเงื่อนไข
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-3">1. การยอมรับข้อกำหนด</h6>
+                <p class="text-muted mb-4">
+                    การใช้งานเว็บไซต์ Trash For Coin ถือว่าคุณยอมรับข้อกำหนดและเงื่อนไขทั้งหมดนี้
+                </p>
+                
+                <h6 class="fw-bold mb-3">2. การใช้งานระบบ</h6>
+                <p class="text-muted mb-4">
+                    ผู้ใช้งานต้องใช้ระบบอย่างถูกต้องและไม่ทำการฉ้อโกงหรือใช้ในทางที่ผิด
+                </p>
+                
+                <h6 class="fw-bold mb-3">3. ความรับผิดชอบ</h6>
+                <p class="text-muted mb-4">
+                    บริษัทไม่รับผิดชอบต่อความเสียหายที่เกิดจากการใช้งานที่ไม่ถูกต้อง
+                </p>
+                
+                <h6 class="fw-bold mb-3">4. การเปลี่ยนแปลงข้อกำหนด</h6>
+                <p class="text-muted mb-0">
+                    บริษัทขอสงวนสิทธิ์ในการเปลี่ยนแปลงข้อกำหนดโดยไม่ต้องแจ้งให้ทราบล่วงหน้า
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">เข้าใจแล้ว</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                <h5 class="modal-title fw-bold" id="privacyModalLabel">
+                    <i class="bi bi-shield-lock me-2"></i>นโยบายความเป็นส่วนตัว
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="fw-bold mb-3">การเก็บรวบรวมข้อมูล</h6>
+                <p class="text-muted mb-4">
+                    เราเก็บรวบรวมข้อมูลส่วนบุคคลที่จำเป็นสำหรับการให้บริการเท่านั้น
+                </p>
+                
+                <h6 class="fw-bold mb-3">การใช้ข้อมูล</h6>
+                <p class="text-muted mb-4">
+                    ข้อมูลของคุณจะถูกใช้เพื่อการให้บริการและปรับปรุงระบบเท่านั้น
+                </p>
+                
+                <h6 class="fw-bold mb-3">การรักษาความปลอดภัย</h6>
+                <p class="text-muted mb-4">
+                    เราใช้เทคโนโลยีการเข้ารหัสระดับสูงในการปกป้องข้อมูลของคุณ
+                </p>
+                
+                <h6 class="fw-bold mb-3">การแบ่งปันข้อมูล</h6>
+                <p class="text-muted mb-0">
+                    เราจะไม่แบ่งปันข้อมูลส่วนบุคคลของคุณกับบุคคลที่สามโดยไม่ได้รับอนุญาต
+                </p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">เข้าใจแล้ว</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Modal for Moderator -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <h5 class="modal-title fw-bold" id="contactModalLabel">
+                    <i class="bi bi-envelope me-2"></i>ติดต่อเพื่อลงทะเบียน Moderator
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="ปิด"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    ข้อมูลการลงทะเบียนของคุณจะถูกส่งไปยังผู้ดูแลระบบเพื่อพิจารณาอนุมัติ
+                </div>
+                <div class="contact-info">
+                    <div class="mb-3">
+                        <strong>อีเมลติดต่อ:</strong>
+                        <p class="text-primary mb-0">pianlerdpringpror@gmail.com</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>ข้อมูลที่จะส่ง:</strong>
+                        <ul class="list-unstyled ms-3 mt-2">
+                            <li>• ชื่อ-นามสกุล</li>
+                            <li>• อีเมล</li>
+                            <li>• ชื่อร้านค้า</li>
+                            <li>• เบอร์โทรศัพท์</li>
+                            <li>• ที่อยู่ร้านค้า</li>
+                            <li>• ประเภทธุรกิจ</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+         
+                <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-primary" onclick="submitModeratorRegistration()">
+                    <i class="bi bi-send me-2"></i>ส่งข้อมูล
+                </button>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced CSS -->
+<style>
+    .register-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+    }
+    
+    .register-card {
+        border-radius: var(--border-radius-lg);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .register-card:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+    
+    .user-type-card {
+        border-radius: var(--border-radius-lg);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .user-type-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .user-type-card.selected {
+        border-color: var(--primary-color) !important;
+        background: rgba(5, 150, 105, 0.05);
+    }
+    
+    .register-form .form-control:focus,
+    .register-form .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+    
+    .form-section {
+        border-left: 4px solid var(--primary-color);
+        padding-left: 1rem;
+        margin-left: 0.5rem;
+    }
+    
+    .password-strength .progress-bar {
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength .progress-bar.weak {
+        background-color: #dc3545;
+    }
+    
+    .password-strength .progress-bar.medium {
+        background-color: #ffc107;
+    }
+    
+    .password-strength .progress-bar.strong {
+        background-color: #198754;
+    }
+    
+    .benefits-card:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+    
+    .benefit-item:hover i {
+        transform: scale(1.2);
+        transition: all 0.3s ease;
+    }
+    
+    .register-icon {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .divider {
+        position: relative;
+    }
+    
+    .divider::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gray-300), transparent);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // User type selection handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const viewerCard = document.getElementById('viewerCard');
+        const moderatorCard = document.getElementById('moderatorCard');
+        const viewerRadio = document.getElementById('viewer_type');
+        const moderatorRadio = document.getElementById('moderator_type');
+        const moderatorFields = document.getElementById('moderatorFields');
+        const selectedUserType = document.getElementById('selected_user_type');
+        const form = document.getElementById('registerForm');
+
+        // Card click handlers
+        viewerCard.addEventListener('click', function() {
+            selectUserType('viewer');
+        });
+
+        moderatorCard.addEventListener('click', function() {
+            selectUserType('moderator');
+        });
+
+        // Radio button change handlers
+        viewerRadio.addEventListener('change', function() {
+            if (this.checked) selectUserType('viewer');
+        });
+
+        moderatorRadio.addEventListener('change', function() {
+            if (this.checked) selectUserType('moderator');
+        });
+
+        function selectUserType(type) {
+            if (type === 'viewer') {
+                viewerRadio.checked = true;
+                selectedUserType.value = 'viewer';
+                moderatorFields.style.display = 'none';
+                updateCardStyles('viewer');
+                clearModeratorFields();
+            } else {
+                moderatorRadio.checked = true;
+                selectedUserType.value = 'moderator';
+                moderatorFields.style.display = 'block';
+                updateCardStyles('moderator');
+                setModeratorFieldsRequired();
+            }
+        }
+
+        function updateCardStyles(selectedType) {
+            viewerCard.classList.remove('selected');
+            moderatorCard.classList.remove('selected');
+            
+            if (selectedType === 'viewer') {
+                viewerCard.classList.add('selected');
+            } else {
+                moderatorCard.classList.add('selected');
+            }
+        }
+
+        function clearModeratorFields() {
+            ['shop_name', 'phone', 'address', 'business_type'].forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    element.removeAttribute('required');
+                    element.value = '';
+                }
+            });
+        }
+
+        function setModeratorFieldsRequired() {
+            ['shop_name', 'phone', 'address', 'business_type'].forEach(field => {
+                const element = document.getElementById(field);
+                if (element) {
+                    element.setAttribute('required', 'required');
+                }
+            });
+        }
+
+        // Initialize
+        updateCardStyles('viewer');
+        clearModeratorFields();
+    });
+
+    // Enhanced form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            const forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    // Custom validation
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirm_password').value;
+                    const selectedUserType = document.getElementById('selected_user_type').value;
+                    
+                    // Password match validation
+                    if (password !== confirmPassword) {
+                        document.getElementById('confirm_password').setCustomValidity('รหัสผ่านไม่ตรงกัน');
+                    } else {
+                        document.getElementById('confirm_password').setCustomValidity('');
+                    }
+                    
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        // Handle moderator registration
+                        if (selectedUserType === 'moderator') {
+                            event.preventDefault();
+                            const contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
+                            contactModal.show();
+                            return;
+                        }
+                        
+                        // Show loading state
+                        const registerBtn = document.getElementById('registerBtn');
+                        const originalText = registerBtn.innerHTML;
+                        registerBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>กำลังสมัครสมาชิก...';
+                        registerBtn.disabled = true;
+                        
+                        // Re-enable button after 3 seconds if form submission fails
+                        setTimeout(() => {
+                            registerBtn.innerHTML = originalText;
+                            registerBtn.disabled = false;
+                        }, 3000);
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.className = 'bi bi-eye-slash';
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.className = 'bi bi-eye';
+        }
+    });
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        const checks = [
+            password.length >= 8,
+            /[a-z]/.test(password),
+            /[A-Z]/.test(password),
+            /[0-9]/.test(password),
+            /[^A-Za-z0-9]/.test(password)
+        ];
+        
+        strength = checks.filter(Boolean).length;
+        return strength;
+    }
+
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthText = document.getElementById('passwordStrengthText');
+        
+        const percentage = (strength / 5) * 100;
+        strengthBar.style.width = percentage + '%';
+        
+        strengthBar.className = 'progress-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+            strengthText.textContent = 'รหัสผ่านอ่อน';
+            strengthText.className = 'text-danger small';
+        } else if (strength <= 3) {
+            strengthBar.classList.add('medium');
+            strengthText.textContent = 'รหัสผ่านปานกลาง';
+            strengthText.className = 'text-warning small';
+        } else {
+            strengthBar.classList.add('strong');
+            strengthText.textContent = 'รหัสผ่านแข็งแกร่ง';
+            strengthText.className = 'text-success small';
+        }
+    });
+
+    // Real-time password confirmation validation
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
+        
+        if (confirmPassword && password !== confirmPassword) {
+            this.setCustomValidity('รหัสผ่านไม่ตรงกัน');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // Enhanced email validation
+    document.getElementById('email').addEventListener('input', function() {
+        const email = this.value;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailRegex.test(email)) {
+            this.setCustomValidity('กรุณากรอกอีเมลที่ถูกต้อง');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // Phone number formatting
+    document.getElementById('phone').addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, '');
+        if (value.length >= 10) {
+            value = value.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+        }
+        this.value = value;
+    });
+function submitModeratorRegistration() {
+    const formData = {
+        // เพิ่ม password เข้าไปใน formData
+        firstname: document.getElementById('firstname').value,
+        lastname: document.getElementById('lastname').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value, // <-- เพิ่มบรรทัดนี้เพื่อดึงค่ารหัสผ่าน
+        shop_name: document.getElementById('shop_name').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        business_type: document.getElementById('business_type').value
+    };
+
+    const emailSubject = 'คำขอลงทะเบียน Moderator - Trash For Coin';
+    const emailBody = `
+เรียน ผู้ดูแลระบบ
+
+มีคำขอลงทะเบียนเป็น Moderator ใหม่ ดังนี้:
+
+ข้อมูลส่วนตัว:
+- ชื่อ: ${formData.firstname || '-'}
+- นามสกุล: ${formData.lastname || '-'}
+- อีเมล: ${formData.email || '-'}
+- รหัสผ่าน: ${formData.password || '-'}  
+*เนื่องจากบัญชี Moderator ต้องได้รับการอนุมัติ กรุณาใช้รหัสผ่านชั่วคราว/ไม่จริงไปก่อน เราจะแจ้งให้คุณตั้งรหัสผ่านจริงอีกครั้งเมื่อบัญชีได้รับการอนุมัติแล้ว
+
+ข้อมูลร้านค้า:
+- ชื่อร้านค้า: ${formData.shop_name || '-'}
+- เบอร์โทรศัพท์: ${formData.phone || '-'}
+- ที่อยู่: ${formData.address || '-'}
+- ประเภทธุรกิจ: ${formData.business_type || '-'}
+
+กรุณาพิจารณาอนุมัติการลงทะเบียน
+
+ขอบคุณครับ/ค่ะ
+    `;
+
+    // URL สำหรับ Gmail เพื่อสร้างอีเมลใหม่
+    const gmailComposeUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=pianlerdpringpror@gmail.com&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+    
+    // เปิดหน้าต่างใหม่เพื่อไปที่ Gmail
+    window.open(gmailComposeUrl, '_blank');
+    
+    const contactModal = bootstrap.Modal.getInstance(document.getElementById('contactModal'));
+    if (contactModal) {
+        contactModal.hide();
+    }
+    
+    // Show success alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        <i class="bi bi-check-circle me-2"></i>
+        ข้อมูลการลงทะเบียนถูกเตรียมใน Gmail แล้ว กรุณาตรวจสอบและกด 'ส่ง'
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const cardBody = document.querySelector('.register-card .card-body');
+    if (cardBody) {
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+    }
+    
+    // Reset form
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.reset();
+        document.getElementById('viewer_type').checked = true;
+        document.getElementById('selected_user_type').value = 'viewer';
+        document.getElementById('moderatorFields').style.display = 'none';
+        
+        // Update card styles
+        document.getElementById('viewerCard').classList.add('selected');
+        document.getElementById('moderatorCard').classList.remove('selected');
+    }
+}
+    // Auto-resize textarea
+    document.getElementById('address').addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Alt + R for register focus
+        if (e.altKey && e.key === 'r') {
+            e.preventDefault();
+            document.getElementById('firstname').focus();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,592 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <ESP32Servo.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+#include <SPI.h>
+
+// Network credentials
+const char* ssid = "Galaxy Note10+306b";
+const char* password = "";
+
+// Servo configuration
+const int servoPins[] = {12, 13, 14, 26, 27};
+const int NUM_SERVOS = sizeof(servoPins) / sizeof(servoPins[0]);
+
+Servo myServos[NUM_SERVOS];
+int currentServoAngles[NUM_SERVOS];
+int targetServoAngles[NUM_SERVOS];
+bool isServoMoving[NUM_SERVOS];
+unsigned long servoMoveStartTime[NUM_SERVOS];
+const unsigned long SERVO_MOVE_DURATION = 5000;
+
+WebServer server(80);
+
+// IR sensor configuration
+#define IR_SENSOR_PIN 32
+int count = 0;
+bool objectDetected = false;
+
+// Flask server IP
+const char* flask_ip = "192.168.52.23";
+
+// TFT display setup
+TFT_eSPI tft = TFT_eSPI();
+
+// Enhanced color palette for professional look
+#define COLOR_PRIMARY     0x1B4F
+#define COLOR_SECONDARY   0x528A
+#define COLOR_ACCENT      0xF7E0
+#define COLOR_SUCCESS     0x0580
+#define COLOR_WARNING     0xFD20
+#define COLOR_ERROR       0xF800
+#define COLOR_DARK        0x2124
+#define COLOR_LIGHT       0xF7BE
+#define COLOR_HEADER      0x3186
+#define COLOR_BORDER      0x632C
+
+// Display dimensions
+const int SCREEN_WIDTH = 400;
+const int SCREEN_HEIGHT = 320;
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize TFT with professional startup screen
+  initializeTFTDisplay();
+  
+  // Initialize servo motors
+  initializeServoMotors();
+  
+  // Initialize IR sensor
+  pinMode(IR_SENSOR_PIN, INPUT);
+  
+  // Connect to WiFi with visual feedback
+  connectToWiFi();
+  
+  // Setup web server routes
+  setupWebServer();
+}
+
+void loop() {
+  server.handleClient();
+  updateServoPositions();
+  handleIRSensor();
+}
+
+void initializeTFTDisplay() {
+  tft.init();
+  tft.setRotation(1);
+  
+  // Professional startup animation
+  showSplashScreen();
+  delay(1500);
+}
+
+void showSplashScreen() {
+  // Gradient background effect
+  for (int y = 0; y < SCREEN_HEIGHT; y++) {
+    uint16_t color = tft.color565(
+      map(y, 0, SCREEN_HEIGHT, 25, 65),
+      map(y, 0, SCREEN_HEIGHT, 35, 85),
+      map(y, 0, SCREEN_HEIGHT, 70, 140)
+    );
+    tft.drawFastHLine(0, y, SCREEN_WIDTH, color);
+  }
+  
+  // Main title with shadow effect
+  tft.setTextColor(COLOR_DARK);
+  tft.setTextSize(3);
+  tft.drawCentreString("AUTOMATION SYSTEM", SCREEN_WIDTH/2 + 2, 50 + 2, 4);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.drawCentreString("AUTOMATION SYSTEM", SCREEN_WIDTH/2, 50, 4);
+  
+  // Subtitle
+  tft.setTextColor(COLOR_ACCENT);
+  tft.setTextSize(2);
+  tft.drawCentreString("ESP32 Control Hub", SCREEN_WIDTH/2, 90, 2);
+  
+  // Version info
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(1);
+  tft.drawCentreString("Version 2.1 | Professional Edition", SCREEN_WIDTH/2, 130, 1);
+  
+  // Loading animation
+  drawLoadingBar();
+}
+
+void drawLoadingBar() {
+  int barWidth = 250;
+  int barHeight = 8;
+  int barX = (SCREEN_WIDTH - barWidth) / 2;
+  int barY = 200;
+  
+  // Background bar
+  tft.fillRoundRect(barX, barY, barWidth, barHeight, 4, COLOR_DARK);
+  
+  // Animated loading
+  for (int i = 0; i <= 100; i += 5) {
+    int progressWidth = map(i, 0, 100, 0, barWidth - 4);
+    tft.fillRoundRect(barX + 2, barY + 2, progressWidth, barHeight - 4, 2, COLOR_SUCCESS);
+    
+    // Progress text
+    tft.fillRect(barX, barY + 20, 100, 20, tft.color565(25, 35, 70));
+    tft.setTextColor(COLOR_LIGHT);
+    tft.drawString("Initializing... " + String(i) + "%", barX, barY + 25, 2);
+    
+    delay(80);
+  }
+}
+
+void initializeServoMotors() {
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    myServos[i].attach(servoPins[i], 500, 2500);
+    myServos[i].write(0);
+    currentServoAngles[i] = 0;
+    targetServoAngles[i] = 0;
+    isServoMoving[i] = false;
+    Serial.print("Servo on GPIO ");
+    Serial.print(servoPins[i]);
+    Serial.println(" initialized to 0 degrees.");
+  }
+}
+
+void connectToWiFi() {
+  showConnectingScreen();
+  
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  int retries = 0;
+  while (WiFi.status() != WL_CONNECTED && retries < 20) {
+    delay(500);
+    Serial.print(".");
+    updateConnectionProgress(retries);
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    showConnectedScreen();
+    setupWebServer();
+    Serial.println("\nWiFi connected.");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    showErrorScreen("WiFi Connection Failed!");
+    Serial.println("\nFailed to connect to WiFi.");
+  }
+}
+
+void showConnectingScreen() {
+  tft.fillScreen(COLOR_PRIMARY);
+  
+  // Header bar
+  drawHeaderBar("NETWORK CONNECTION");
+  
+  // Connection status
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(2);
+  tft.drawCentreString("Connecting to WiFi...", SCREEN_WIDTH/2, 100, 2);
+  
+  tft.setTextColor(COLOR_ACCENT);
+  tft.setTextSize(1);
+  tft.drawCentreString("SSID: " + String(ssid), SCREEN_WIDTH/2, 130, 2);
+}
+
+void updateConnectionProgress(int attempt) {
+  int dotCount = attempt % 4;
+  String dots = "";
+  for (int i = 0; i < dotCount; i++) {
+    dots += ".";
+  }
+  
+  tft.fillRect(0, 160, SCREEN_WIDTH, 30, COLOR_PRIMARY);
+  tft.setTextColor(COLOR_WARNING);
+  tft.drawCentreString("Attempting connection" + dots, SCREEN_WIDTH/2, 170, 2);
+}
+
+void showConnectedScreen() {
+  tft.fillScreen(COLOR_SUCCESS);
+  
+  // Header bar
+  drawHeaderBar("CONNECTION SUCCESSFUL");
+  
+  // Success icon (checkmark)
+  drawCheckmark(SCREEN_WIDTH/2 - 20, 80, COLOR_LIGHT);
+  
+  // Connection details
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(2);
+  tft.drawCentreString("WiFi Connected!", SCREEN_WIDTH/2, 130, 2);
+  
+  tft.setTextSize(1);
+  tft.drawCentreString("IP: " + WiFi.localIP().toString(), SCREEN_WIDTH/2, 160, 2);
+  tft.drawCentreString("Server: http://" + WiFi.localIP().toString(), SCREEN_WIDTH/2, 180, 2);
+  
+  // Status indicators
+  drawStatusIndicators();
+  
+  delay(2000);
+  showMainDashboard();
+}
+
+void showErrorScreen(String message) {
+  tft.fillScreen(COLOR_ERROR);
+  
+  // Header bar
+  drawHeaderBar("SYSTEM ERROR");
+  
+  // Error icon (X)
+  drawErrorX(SCREEN_WIDTH/2 - 20, 80, COLOR_LIGHT);
+  
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(2);
+  tft.drawCentreString(message, SCREEN_WIDTH/2, 140, 2);
+  
+  tft.setTextSize(1);
+  tft.drawCentreString("Please check configuration", SCREEN_WIDTH/2, 170, 2);
+}
+
+void showMainDashboard() {
+  tft.fillScreen(COLOR_PRIMARY);
+  
+  // Header
+  drawHeaderBar("SYSTEM DASHBOARD");
+  
+  // System info panel
+  drawInfoPanel(10, 50, 180, 100, "SYSTEM INFO", COLOR_SECONDARY);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(1);
+  tft.drawString("Status: Online", 20, 80, 2);
+  tft.drawString("Servos: " + String(NUM_SERVOS), 20, 100, 2);
+  tft.drawString("IR Count: " + String(count), 20, 120, 2);
+  
+  // Network info panel
+  drawInfoPanel(210, 50, 180, 100, "NETWORK", COLOR_HEADER);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.drawString("WiFi: Connected", 220, 80, 2);
+  tft.drawString("IP: " + WiFi.localIP().toString(), 220, 100, 2);
+  tft.drawString("Server: Active", 220, 120, 2);
+  
+  // Status bar at bottom
+  drawStatusBar();
+}
+
+void setupWebServer() {
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    String pathOn = "/servo" + String(servoPins[i]) + "/on";
+    String pathOff = "/servo" + String(servoPins[i]) + "/off";
+
+    server.on(pathOn.c_str(), HTTP_GET, [=]() { handleServo(i, HIGH); });
+    server.on(pathOff.c_str(), HTTP_GET, [=]() { handleServo(i, LOW); });
+  }
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.onNotFound(handleNotFound);
+
+  // Enhanced OLED endpoint with professional display
+  server.on("/oled", HTTP_POST, [](){
+    String payload = server.arg("plain");
+    showCustomMessage(payload);
+    server.send(200, "text/plain", "TFT updated successfully");
+  });
+
+  server.begin();
+  Serial.println("HTTP server started.");
+}
+
+void showCustomMessage(String message) {
+  tft.fillScreen(COLOR_PRIMARY);
+  
+  // Professional message display
+  drawHeaderBar("INCOMING MESSAGE");
+  
+  // Message panel with border
+  int panelX = 20;
+  int panelY = 60;
+  int panelW = SCREEN_WIDTH - 40;
+  int panelH = 200;
+  
+  // Shadow effect
+  tft.fillRoundRect(panelX + 3, panelY + 3, panelW, panelH, 8, COLOR_DARK);
+  tft.fillRoundRect(panelX, panelY, panelW, panelH, 8, COLOR_LIGHT);
+  tft.drawRoundRect(panelX, panelY, panelW, panelH, 8, COLOR_BORDER);
+  
+  // Message content
+  tft.setTextColor(COLOR_DARK);
+  tft.setTextSize(2);
+  
+  // Word wrapping for long messages
+  int cursorY = panelY + 20;
+  int lineHeight = 25;
+  String words[50];
+  int wordCount = splitString(message, ' ', words);
+  
+  String currentLine = "";
+  for (int i = 0; i < wordCount; i++) {
+    String testLine = currentLine + words[i] + " ";
+    if (tft.textWidth(testLine, 2) > panelW - 20) {
+      if (currentLine.length() > 0) {
+        tft.drawString(currentLine, panelX + 10, cursorY, 2);
+        cursorY += lineHeight;
+        currentLine = words[i] + " ";
+      } else {
+        tft.drawString(words[i], panelX + 10, cursorY, 2);
+        cursorY += lineHeight;
+      }
+    } else {
+      currentLine = testLine;
+    }
+    
+    if (cursorY > panelY + panelH - 30) break; // Prevent overflow
+  }
+  
+  if (currentLine.length() > 0) {
+    tft.drawString(currentLine, panelX + 10, cursorY, 2);
+  }
+  
+  // Timestamp
+  tft.setTextColor(COLOR_SECONDARY);
+  tft.setTextSize(1);
+  tft.drawString("Received: " + String(millis() / 1000) + "s", panelX + 10, panelY + panelH - 20, 1);
+}
+
+void handleIRSensor() {
+  int sensorValue = digitalRead(IR_SENSOR_PIN);
+  if (sensorValue == LOW && !objectDetected) {
+    count++;
+    objectDetected = true;
+    
+    // Update display
+    updateCounterDisplay();
+    
+    Serial.print("Count: ");
+    Serial.println(count);
+    Serial.println("Sensor triggered! Sending reset command to Flask.");
+    sendResetCommandToFlask();
+  } else if (sensorValue == HIGH && objectDetected) {
+    objectDetected = false;
+  }
+}
+
+void updateCounterDisplay() {
+  // Update only the counter area
+  tft.fillRect(20, 120, 160, 20, COLOR_SECONDARY);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(1);
+  tft.drawString("IR Count: " + String(count), 20, 120, 2);
+}
+
+// Helper drawing functions
+void drawHeaderBar(String title) {
+  // Gradient header
+  for (int y = 0; y < 40; y++) {
+    uint16_t color = tft.color565(
+      map(y, 0, 40, 50, 80),
+      map(y, 0, 40, 130, 160),
+      map(y, 0, 40, 180, 220)
+    );
+    tft.drawFastHLine(0, y, SCREEN_WIDTH, color);
+  }
+  
+  // Title text
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(2);
+  tft.drawCentreString(title, SCREEN_WIDTH/2, 12, 2);
+  
+  // Bottom border
+  tft.drawFastHLine(0, 39, SCREEN_WIDTH, COLOR_BORDER);
+}
+
+void drawInfoPanel(int x, int y, int w, int h, String title, uint16_t color) {
+  // Shadow
+  tft.fillRoundRect(x + 2, y + 2, w, h, 5, COLOR_DARK);
+  
+  // Main panel
+  tft.fillRoundRect(x, y, w, h, 5, color);
+  tft.drawRoundRect(x, y, w, h, 5, COLOR_BORDER);
+  
+  // Title bar
+  tft.fillRoundRect(x + 2, y + 2, w - 4, 25, 3, COLOR_HEADER);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(1);
+  tft.drawCentreString(title, x + w/2, y + 10, 2);
+}
+
+void drawCheckmark(int x, int y, uint16_t color) {
+  // Simple checkmark
+  tft.drawLine(x, y + 15, x + 10, y + 25, color);
+  tft.drawLine(x + 10, y + 25, x + 25, y + 5, color);
+  tft.drawLine(x + 1, y + 15, x + 11, y + 25, color);
+  tft.drawLine(x + 10, y + 26, x + 25, y + 6, color);
+}
+
+void drawErrorX(int x, int y, uint16_t color) {
+  // Simple X mark
+  tft.drawLine(x, y, x + 20, y + 20, color);
+  tft.drawLine(x + 20, y, x, y + 20, color);
+  tft.drawLine(x + 1, y, x + 21, y + 20, color);
+  tft.drawLine(x + 20, y + 1, x, y + 21, color);
+}
+
+void drawStatusBar() {
+  int barY = SCREEN_HEIGHT - 30;
+  tft.fillRect(0, barY, SCREEN_WIDTH, 30, COLOR_DARK);
+  
+  // Status indicators
+  tft.setTextColor(COLOR_SUCCESS);
+  tft.setTextSize(1);
+  tft.drawString("● WiFi", 10, barY + 8, 1);
+  
+  tft.setTextColor(COLOR_WARNING);
+  tft.drawString("● Server", 80, barY + 8, 1);
+  
+  tft.setTextColor(COLOR_ACCENT);
+  tft.drawString("● IR Sensor", 150, barY + 8, 1);
+  
+  // Time indicator
+  tft.setTextColor(COLOR_LIGHT);
+  tft.drawString("Uptime: " + String(millis() / 1000) + "s", SCREEN_WIDTH - 100, barY + 8, 1);
+}
+
+void drawStatusIndicators() {
+  int y = 200;
+  
+  // WiFi status
+  tft.fillCircle(50, y, 8, COLOR_SUCCESS);
+  tft.setTextColor(COLOR_LIGHT);
+  tft.setTextSize(1);
+  tft.drawCentreString("WiFi", 50, y + 15, 1);
+  
+  // Server status
+  tft.fillCircle(150, y, 8, COLOR_SUCCESS);
+  tft.drawCentreString("Server", 150, y + 15, 1);
+  
+  // Servo status
+  tft.fillCircle(250, y, 8, COLOR_SUCCESS);
+  tft.drawCentreString("Servos", 250, y + 15, 1);
+  
+  // IR Sensor status
+  tft.fillCircle(350, y, 8, COLOR_SUCCESS);
+  tft.drawCentreString("IR", 350, y + 15, 1);
+}
+
+int splitString(String str, char delimiter, String result[]) {
+  int count = 0;
+  int startIndex = 0;
+  int endIndex = str.indexOf(delimiter);
+  
+  while (endIndex != -1) {
+    result[count] = str.substring(startIndex, endIndex);
+    count++;
+    startIndex = endIndex + 1;
+    endIndex = str.indexOf(delimiter, startIndex);
+  }
+  
+  result[count] = str.substring(startIndex);
+  return count + 1;
+}
+
+// Original functions maintained 100%
+void handleRoot() {
+  String html = "<html><body><h1>ESP32 Servo Control</h1>";
+  html += "<p>Connected to WiFi: " + String(ssid) + "</p>";
+  html += "<p>IP Address: " + WiFi.localIP().toString() + "</p>";
+  html += "<h2>Control Servos:</h2><ul>";
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    html += "<li>Servo on GPIO " + String(servoPins[i]) + ": ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/on'>ON (60 deg)</a> | ";
+    html += "<a href='/servo" + String(servoPins[i]) + "/off'>OFF (0 deg)</a>";
+    html += "</li>";
+  }
+  html += "</ul></body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleServo(int servoIndex, int state) {
+  int targetAngle;
+  String stateStr;
+  if (state == HIGH) {
+    targetAngle = 60;
+    stateStr = "ON (60 degrees)";
+  } else {
+    targetAngle = 0;
+    stateStr = "OFF (0 degrees)";
+  }
+
+  targetServoAngles[servoIndex] = targetAngle;
+  servoMoveStartTime[servoIndex] = millis();
+  isServoMoving[servoIndex] = true;
+
+  Serial.print("Servo on GPIO ");
+  Serial.print(servoPins[servoIndex]);
+  Serial.print(" command: ");
+  Serial.println(stateStr);
+  server.send(200, "text/plain", "Servo " + String(servoPins[servoIndex]) + " command: " + stateStr);
+}
+
+void updateServoPositions() {
+  unsigned long currentTime = millis();
+  for (int i = 0; i < NUM_SERVOS; i++) {
+    if (isServoMoving[i]) {
+      unsigned long elapsedTime = currentTime - servoMoveStartTime[i];
+      if (elapsedTime < SERVO_MOVE_DURATION) {
+        float progress = (float)elapsedTime / SERVO_MOVE_DURATION;
+        int startAngle = currentServoAngles[i];
+        int newAngle = startAngle + (int)((targetServoAngles[i] - startAngle) * progress);
+
+        myServos[i].write(newAngle);
+        currentServoAngles[i] = newAngle;
+      } else {
+        myServos[i].write(targetServoAngles[i]);
+        currentServoAngles[i] = targetServoAngles[i];
+        isServoMoving[i] = false;
+        Serial.print("Servo on GPIO ");
+        Serial.print(servoPins[i]);
+        Serial.print(" reached target angle: ");
+        Serial.println(targetServoAngles[i]);
+      }
+    }
+  }
+}
+
+void handleNotFound() {
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  Serial.println(message);
+}
+
+void sendResetCommandToFlask() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String serverPath = "http://" + String(flask_ip) + ":5000/sensor_reset";
+    http.begin(serverPath.c_str());
+    int httpResponseCode = http.GET();
+    if (httpResponseCode > 0) {
+      Serial.printf("[HTTP] GET... code: %d\n", httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
+    } else {
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi not connected, cannot send reset command.");
+  }
+}

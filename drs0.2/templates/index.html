@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+
+{% block title %}หน้าแรก - Trash For Coin | ระบบมัดจำบรรจุภัณฑ์ขยะเพื่อสิ่งแวดล้อมที่ยั่งยืน{% endblock %}
+
+{% block content %}
+<section class="hero-section position-relative overflow-hidden">
+    <div class="hero-background position-absolute w-100 h-100" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%); opacity: 0.95;"></div>
+    <div class="hero-pattern position-absolute w-100 h-100" style="background-image: url('data:image/svg+xml,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 viewBox%3D%220 0 100 100%22%3E%3Cdefs%3E%3Cpattern id%3D%22grid%22 width%3D%2210%22 height%3D%2210%22 patternUnits%3D%22userSpaceOnUse%22%3E%3Cpath d%3D%22M 10 0 L 0 0 0 10%22 fill%3D%22none%22 stroke%3D%22rgba(255%2C255%2C255%2C0.1)%22 stroke-width%3D%221%22%2F%3E%3C%2Fpattern%3E%3C%2Fdefs%3E%3Crect width%3D%22100%22 height%3D%22100%22 fill%3D%22url(%23grid)%22%2F%3E%3C%2Fsvg%3E');"></div>
+
+    <div class="container position-relative py-5">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-6 text-white">
+                <div class="hero-content slide-up">
+                    <h1 class="display-3 fw-bold mb-4 text-white">
+                        ขยะแลกเหรียญ
+                        <span class="d-block text-warning">เพื่อโลกที่ยั่งยืน</span>
+                    </h1>
+                    <p class="lead mb-4 text-white-50">
+                        ระบบมัดจำบรรจุภัณฑ์ขยะที่ทันสมัย ส่งเสริมการรีไซเคิลและลดขยะในชุมชน
+                        ด้วยเทคโนโลยีที่เข้าใจง่าย ใช้งานสะดวก และสร้างรายได้ให้กับผู้ใช้งาน
+                    </p>
+
+                    <div class="hero-stats row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">{{ stats.total_users }}</h3>
+                                <small class="text-white-50">ผู้ใช้งาน</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">{{ stats.recycled_waste }}</h3>
+                                <small class="text-white-50">ขยะที่รีไซเคิล</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item text-center">
+                                <h3 class="fw-bold text-warning mb-1">{{ stats.satisfaction }}%</h3>
+                                <small class="text-white-50">ความพึงพอใจ</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hero-actions d-flex flex-wrap gap-3">
+                        {% if not session.loggedin %}
+                        <a href="{{ url_for('register') }}" class="btn btn-warning btn-lg px-4 py-3">
+                            <i class="bi bi-person-plus me-2"></i>เริ่มต้นใช้งาน
+                        </a>
+                        <a href="{{ url_for('about') }}" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="bi bi-info-circle me-2"></i>เรียนรู้เพิ่มเติม
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('tbl_order') }}" class="btn btn-warning btn-lg px-4 py-3">
+                            <i class="bi bi-cart-check me-2"></i>ดูคำสั่งซื้อ
+                        </a>
+                        {% if session.role in ['root_admin', 'administrator', 'moderator'] %}
+                        <a href="{{ url_for('cart') }}" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="bi bi-upc-scan me-2"></i>เริ่มสแกน
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="hero-visual text-center slide-up" style="animation-delay: 0.2s;">
+                    <div class="floating-elements position-relative">
+                        <div class="main-icon bg-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg"
+                             style="width: 200px; height: 200px; animation: float 3s ease-in-out infinite;">
+                            <i class="bi bi-recycle text-success" style="font-size: 5rem;"></i>
+                        </div>
+
+                        <div class="floating-item position-absolute bg-warning rounded-circle d-flex align-items-center justify-content-center shadow"
+                             style="width: 60px; height: 60px; top: -20px; right: 20px; animation: float 3s ease-in-out infinite 0.5s;">
+                            <i class="bi bi-coin text-white fs-4"></i>
+                        </div>
+
+                        <div class="floating-item position-absolute bg-info rounded-circle d-flex align-items-center justify-content-center shadow"
+                             style="width: 50px; height: 50px; bottom: 20px; left: -10px; animation: float 3s ease-in-out infinite 1s;">
+                            <i class="bi bi-leaf text-white fs-5"></i>
+                        </div>
+
+                        <div class="floating-item position-absolute bg-danger rounded-circle d-flex align-items-center justify-content-center shadow"
+                             style="width: 40px; height: 40px; top: 50px; left: -20px; animation: float 3s ease-in-out infinite 1.5s;">
+                            <i class="bi bi-heart text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="scroll-indicator position-absolute bottom-0 start-50 translate-middle-x mb-4">
+        <div class="scroll-arrow text-white text-center" style="animation: bounce 2s infinite;">
+            <i class="bi bi-chevron-down fs-4"></i>
+            <div class="small">เลื่อนลงเพื่อดูเพิ่มเติม</div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">ทำไมต้องเลือก Trash For Coin?</h2>
+                <p class="lead text-muted">
+                    ระบบที่ออกแบบมาเพื่อให้การจัดการขยะเป็นเรื่องง่าย มีกำไร และเป็นมิตรกับสิ่งแวดล้อม
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-currency-dollar text-primary fs-1"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">สร้างรายได้</h4>
+                        <p class="text-muted mb-4">
+                            รับเงินมัดจำคืนทุกครั้งที่นำบรรจุภัณฑ์มาคืน ระบบโปร่งใส ได้เงินจริง
+                        </p>
+                        <div class="feature-highlight bg-primary bg-opacity-10 rounded p-3">
+                            <strong class="text-primary">1 บาท</strong> ต่อ 1 ชิ้น
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-leaf text-success fs-1"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">รักษ์โลก</h4>
+                        <p class="text-muted mb-4">
+                            ช่วยลดขยะที่ไปหลุมฝังกลบ ส่งเสริมการรีไซเคิล เพื่อสิ่งแวดล้อมที่ดีขึ้น
+                        </p>
+                        <div class="feature-highlight bg-success bg-opacity-10 rounded p-3">
+                            <strong class="text-success">95%</strong> ลดขยะ
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-phone text-info fs-1"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">ใช้งานง่าย</h4>
+                        <p class="text-muted mb-4">
+                            ระบบที่เข้าใจง่าย ใช้งานสะดวก ผ่านเว็บไซต์ที่ทันสมัย
+                        </p>
+                        <div class="feature-highlight bg-info bg-opacity-10 rounded p-3">
+                            <strong class="text-info">24/7</strong> พร้อมใช้งาน
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">วิธีการใช้งาน</h2>
+                <p class="lead text-muted">
+                    เพียง 3 ขั้นตอนง่ายๆ คุณก็สามารถเริ่มสร้างรายได้จากขยะได้แล้ว
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card text-center">
+                    <div class="step-number bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                         style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">1</div>
+                    <div class="step-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-bag text-primary fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">ซื้อสินค้า</h5>
+                    <p class="text-muted">
+                        ซื้อสินค้าที่มีบรรจุภัณฑ์ และจ่ายเงินมัดจำ
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card text-center">
+                    <div class="step-number bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                         style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">2</div>
+                    <div class="step-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-recycle text-success fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">นำบรรจุภัณฑ์คืน</h5>
+                    <p class="text-muted">
+                        นำบรรจุภัณฑ์ที่ใช้แล้วมาคืนที่จุดรับ
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card text-center">
+                    <div class="step-number bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                         style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">3</div>
+                    <div class="step-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-cash-coin text-warning fs-1"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">รับเงินคืน</h5>
+                    <p class="text-muted">
+                        รับเงินมัดจำคืนทันที ผ่านระบบที่ปลอดภัย
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">ประเภทขยะที่รองรับ</h2>
+                <p class="lead text-muted">
+                    ระบบรองรับการจัดการขยะ 5 ประเภทหลัก ครอบคลุมบรรจุภัณฑ์ส่วนใหญ่
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="waste-type-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="waste-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-cup-straw text-primary fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">พลาสติก PET</h5>
+                        <p class="text-muted mb-3">
+                            ขวดน้ำ ขวดน้ำอัดลม ภาชนะพลาสติกใส
+                        </p>
+                        <div class="badge bg-primary">มัดจำ 1 บาท/ชิ้น</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="waste-type-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="waste-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi-box text-success fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">อลูมิเนียม</h5>
+                        <p class="text-muted mb-3">
+                            กระป๋องเครื่องดื่ม ภาชนะอลูมิเนียม
+                        </p>
+                        <div class="badge bg-success">มัดจำ 1 บาท/ชิ้น</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="waste-type-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="waste-icon bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-cup-hot text-info fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">แก้ว</h5>
+                        <p class="text-muted mb-3">
+                            ขวดแก้ว ภาชนะแก้วที่สามารถหลอมได้
+                        </p>
+                        <div class="badge bg-info">มัดจำ 1 บาท/ชิ้น</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6">
+                <div class="waste-type-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="waste-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-fire text-warning fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">วัสดุเผาเพื่อพลังงาน</h5>
+                        <p class="text-muted mb-3">
+                            ขยะที่สามารถนำไปเผาเพื่อผลิตพลังงาน
+                        </p>
+                        <div class="badge bg-warning">มัดจำ 1 บาท/ชิ้น</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 col-md-6">
+                <div class="waste-type-card card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="waste-icon bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3">ขยะปนเปื้อน</h5>
+                        <p class="text-muted mb-3">
+                            ขยะที่มีการปนเปื้อนอาหาร ต้องมีการจัดการอย่างเหมาะสม
+                        </p>
+                        <div class="badge bg-danger">มัดจำ 1 บาท/ชิ้น</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-primary text-white">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">ผลกระทบเชิงบวก</h2>
+                <p class="lead text-white-50">
+                    ร่วมกันสร้างการเปลี่ยนแปลงที่ดีต่อสิ่งแวดล้อมและสังคม
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-icon bg-white bg-opacity-20 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-people text-white fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-2">{{ stats.total_users }}</h3>
+                    <p class="text-white-50 mb-0">ผู้ใช้งานทั้งหมด</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-icon bg-white bg-opacity-20 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-recycle text-white fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-2">{{ stats.recycled_waste }}</h3>
+                    <p class="text-white-50 mb-0">ขยะที่รีไซเคิลแล้ว</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-icon bg-white bg-opacity-20 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-cash-coin text-white fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-2">฿ {{ stats.recycled_waste }}</h3>
+                    <p class="text-white-50 mb-0">เงินมัดจำที่จ่ายคืน</p>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item">
+                    <div class="stat-icon bg-white bg-opacity-20 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width: 80px; height: 80px;">
+                        <i class="bi bi-tree text-white fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-2">{{ stats.satisfaction }}</h3>
+                    <p class="text-white-50 mb-0">ต้นไม้ที่ช่วยรักษาได้</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="cta-card card border-0 shadow-lg bg-gradient" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body p-5">
+                        <h2 class="display-5 fw-bold mb-4">พร้อมเริ่มต้นแล้วหรือยัง?</h2>
+                        <p class="lead text-muted mb-4">
+                            เข้าร่วมกับเราวันนี้ และเป็นส่วนหนึ่งของการเปลี่ยนแปลงเพื่อสิ่งแวดล้อมที่ดีขึ้น
+                            พร้อมสร้างรายได้จากขยะที่คุณมี
+                        </p>
+
+                        <div class="cta-actions d-flex flex-wrap gap-3 justify-content-center">
+                            {% if not session.loggedin %}
+                            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3">
+                                <i class="bi bi-person-plus me-2"></i>สมัครสมาชิกฟรี
+                            </a>
+                            <a href="{{ url_for('about') }}" class="btn btn-outline-primary btn-lg px-5 py-3">
+                                <i class="bi bi-info-circle me-2"></i>เรียนรู้เพิ่มเติม
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('tbl_order') }}" class="btn btn-primary btn-lg px-5 py-3">
+                                <i class="bi bi-cart-check me-2"></i>ดูคำสั่งซื้อของฉัน
+                            </a>
+                            {% if session.role in ['root_admin', 'administrator', 'moderator'] %}
+                            <a href="{{ url_for('cart') }}" class="btn btn-outline-primary btn-lg px-5 py-3">
+                                <i class="bi bi-upc-scan me-2"></i>เริ่มสแกนสินค้า
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="cta-features row g-3 mt-4">
+                            <div class="col-md-4">
+                                <div class="feature-item d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="small text-muted">ฟรี ไม่มีค่าใช้จ่าย</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-item d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="small text-muted">ปลอดภัย เชื่อถือได้</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feature-item d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="small text-muted">ใช้งานง่าย สะดวก</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

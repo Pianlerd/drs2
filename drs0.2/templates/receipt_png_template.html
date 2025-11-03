@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ใบเสร็จ 58mm</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+    @font-face {
+        font-family: 'THSarabunNew';
+        font-style: normal;
+        font-weight: normal;
+        src: url("https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/THSarabunNew/THSarabunNew.woff2") format('woff2');
+    }
+
+    @page {
+        size: 58mm auto;
+        margin: 0;
+    }
+
+    body {
+        font-family: 'THSarabunNew', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        background-color: #fff;
+    }
+
+    .receipt {
+        width: 384px; /* ขนาดพอดีกระดาษ 58mm */
+        padding: 16px;
+        box-sizing: border-box;
+        background: #fff;
+    }
+
+    .receipt-text {
+        font-size: 48px; /* ตัวใหญ่ชัด */
+        line-height: 1.2; /* ลด line-height เพื่อให้บรรทัดชิดกันมากขึ้น */
+    }
+
+    .receipt-heading {
+        font-size: 54px;
+        font-weight: bold;
+        margin-top: 24px;
+        margin-bottom: 16px;
+    }
+
+    .barcode-svg {
+        width: 100%;
+        height: 160px;
+        margin-bottom: 16px;
+    }
+
+    .section {
+        margin-bottom: 24px;
+    }
+
+    .total-section {
+        border-top: 2px solid #555;
+        padding-top: 16px;
+        margin-top: 32px;
+    }
+
+    .qr-section img {
+        width: 240px;
+        height: 240px;
+        display: block;
+        margin: 0 auto;
+    }
+
+    canvas {
+        image-rendering: crisp-edges;
+        image-rendering: pixelated;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="receipt-container" class="receipt">
+    
+    <div class="flex justify-center mb-4">
+        <svg id="barcode-area" class="barcode-svg"></svg>
+    </div>
+
+    <p class="receipt-text text-left mb-4">รหัสคำสั่งซื้อ: **{{ current_order_id }}**</p>
+
+    <h2 class="receipt-heading text-left">รายการสินค้า</h2>
+    <div class="border-t border-gray-400 pt-4">
+        {% for item in orders %}
+        <div class="flex flex-col mb-4">
+            <div class="flex justify-between receipt-text">
+                <div class="flex-grow pr-2">
+                    <span class="font-bold">{{ item.quantity }}</span> {{ item.products_name }}
+                </div>
+                <div class="ml-auto text-right flex-shrink-0 whitespace-nowrap"> 
+                    <span class="font-bold">฿{{ (item.quantity | float) * (item.price | float) | round(2) }} </span>
+                </div>
+            </div>
+            
+            {% if item.quantity > 1 %}
+            <div class="flex justify-end receipt-text mt-[-10px] text-gray-700"> <span class="text-right flex-shrink-0 whitespace-nowrap">@{{ item.price | float | round(2) }}</span>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="total-section flex justify-between receipt-heading">
+        <p>รวมทั้งหมด ({{ total_quantity }})</p>
+        <span class="ml-4 **text-black** font-bold flex-shrink-0 whitespace-nowrap">
+        ฿{{ total_price | float | round(2) }}
+        </span>
+    </div>
+
+    <div class="text-center mt-8 qr-section">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://barcode.tec-it.com/barcode.ashx?data={{ barcode_id }}" 
+              alt="QR Code" 
+              crossorigin="anonymous">
+        <a href="https://barcode.tec-it.com/barcode.ashx?data={{ barcode_id }}" 
+           download="barcode_{{ current_order_id }}.png" 
+           class="receipt-text **text-black** hover:underline block mt-4">
+            ดาวน์โหลด Barcode แยก (หากต้องการ)
+            
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const receipt = document.getElementById('receipt-container');
+    // เพิ่มค่า default สำหรับการทดสอบหากไม่มี template engine
+    const barcodeID = '{{ barcode_id }}' || '9027193820987'; 
+    const currentOrderID = '{{ current_order_id }}' || '100078';
+
+    // สร้าง Barcode ชัด
+    if (barcodeID) {
+        JsBarcode("#barcode-area", barcodeID, {
+            format: "CODE128",
+            displayValue: true,
+            text: barcodeID,
+            fontSize: 28,
+            margin: 0,
+            width: 4,
+            height: 160
+        });
+    }
+
+    // แปลงเป็น PNG และดาวน์โหลดอัตโนมัติ (เปิดใช้งานแล้ว)
+    setTimeout(() => {
+        html2canvas(receipt, {
+            scale: 5, 
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            width: 384
+        }).then(canvas => {
+            canvas.toBlob(function(blob) {
+                const link = document.createElement('a');
+                link.download = `receipt_order_${currentOrderID}.png`;
+                link.href = URL.createObjectURL(blob);
+                
+                // เปิดใช้งานการดาวน์โหลด
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            }, 'image/png');
+        }).catch(err => {
+            console.error(err);
+        });
+    }, 1000); // หน่วงเวลา 1 วินาทีเพื่อให้ทุกองค์ประกอบโหลดเสร็จ
+});
+</script>
+
+</body>
+</html>

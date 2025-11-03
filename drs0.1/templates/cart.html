@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block title %}จัดการคำสั่งซื้อ - Trash For Coin{% endblock %}
+
+{% block content %}
+<section class="btn-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">ระบบเพิ่มคำสั่งซื้อ</h1>
+                <p class="lead mb-4">เพิ่มคำสั่งซื้อเข้าสู่ระบบผ่านระบบสแกนเนอร์</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-4 bg-light">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if session.loggedin and session.role in ['root_admin', 'administrator', 'moderator', 'member'] %}
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>เพิ่มคำสั่งซื้อใหม่</h5>
+            </div>
+            <form id="addItemForm" method="POST" class="card-body needs-validation" novalidate>
+                <input type="hidden" name="action" value="add_manual">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="add_order_id" class="form-label">รหัสคำสั่งซื้อปัจจุบัน</label>
+                        <input type="text" class="form-control" id="add_order_id" name="order_id" required readonly
+                                value="{{ current_auto_order_id }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="add_email" class="form-label">อีเมลผู้ดำเนินการ</label>
+                        <input type="email" class="form-control" id="add_email" name="email"
+                                value="{{ request_form_data.email if request_form_data.action == 'add_manual' else (session.email if session.role in ['member', 'root_admin', 'administrator', 'moderator'] else '') }}"
+                                {% if session.role == 'member' %}readonly{% endif %} required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="products_id_input" class="form-label">รหัสสินค้า</label>
+                        <input type="text" class="form-control" id="products_id_input" name="products_id_input"
+                                list="productsDatalist" placeholder="พิมพ์หรือสแกนรหัสสินค้า..." required autofocus>
+                        <datalist id="productsDatalist">
+                        </datalist>
+                        <div class="invalid-feedback">กรุณาระบุรหัสสินค้า</div>
+                    </div>
+                     
+                    <input type="hidden" id="raw_products_data_string" value="{{ products_data_string }}">
+
+                    <div class="col-md-6">
+                        <label for="selected_product_details_display" class="form-label">สินค้า (ชื่อสินค้า | สต็อก)</label>
+                        <input type="text" class="form-control" id="selected_product_details_display" readonly disabled
+                                value="{{ selected_product_details_display }}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="add_quantity" class="form-label">จำนวน</label>
+                        <input type="text" class="form-control" id="add_quantity_display" value="1 (อัตโนมัติ)" readonly disabled>
+                        <input type="hidden" name="quantity" value="1"> </div>
+                     
+                    <input type="hidden" name="disquantity" value="0">
+                     
+                    <div class="col-md-6">
+                        <label for="add_barcode_id_hidden" class="form-label">รหัสบาร์โค้ด</label>
+                        <input type="text" class="form-control" id="add_barcode_id_hidden" name="barcode_id" readonly
+                                value="{{ selected_product_barcode }}">
+                        <div class="form-text">รหัสบาร์โค้ดสำหรับคำสั่งซื้อนี้</div>
+                    </div>
+                     
+                    </div>
+            </form>
+        </div>
+
+        {# ปุ่ม "เสร็จสิ้น" สำหรับคำสั่งซื้อปัจจุบัน #}
+        <div class="text-end mb-4">
+            <form method="POST" action="{{ url_for('cart') }}" class="d-inline-block">
+                <input type="hidden" name="action" value="complete_order">
+                <button type="submit" class="btn btn-warning btn-lg">
+                    <i class="bi bi-check-circle me-2"></i>เสร็จสิ้นคำสั่งซื้อนี้
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="py-4">
+    <div class="container">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>รายการคำสั่งซื้อปัจจุบัน (รหัส: {{ current_auto_order_id }})</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>รหัสคำสั่งซื้อ</th>
+                                <th>รหัสสินค้า</th>
+                                <th>ชื่อสินค้า</th>
+                                <th>ราคา</th>
+                                <th>ราคารวม</th>
+                                <th>บาร์โค้ด</th>
+                                <th>จำนวน</th>
+                                <th>ทิ้ง</th>
+                                <th>อีเมล</th>
+                                <th>วันที่</th>
+                                <th>ดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ order.order_id }}</td>
+                                <td>{{ order.products_id }}</td>
+                                <td>{{ order.products_name }}</td>
+                                <td>{{ "{:,.2f}".format(order.price) }}</td>
+                                <td>{{ "{:,.2f}".format(order.price * order.quantity) }}</td>
+                                <td>{{ order.barcode_id }}</td>
+                                <td>{{ order.quantity }}</td>
+                                <td>{{ order.disquantity }}</td>
+                                <td>{{ order.email }}</td>
+                                <td>{{ order.order_date.strftime('%Y-%m-%d %H:%M') if order.order_date else '' }}</td>
+                                <td>
+                                    {% if session.loggedin and session.role in ['root_admin', 'administrator', 'moderator', 'member'] %}
+                                    <button type="button" class="btn btn-sm btn-info me-1"
+                                            data-bs-toggle="modal" data-bs-target="#editOrderItemModal"
+                                            data-id="{{ order.id }}"
+                                            data-products_id="{{ order.products_id }}"
+                                            data-products_name="{{ order.products_name }}"
+                                            data-quantity="{{ order.quantity }}"
+                                            data-disquantity="{{ order.disquantity }}"
+                                            data-order_id="{{ order.order_id }}"
+                                            data-barcode_id="{{ order.barcode_id }}">
+                                        <i class="bi bi-pencil-square"></i> แก้ไข
+                                    </button>
+                                    <form action="{{ url_for('delete_cart_item', item_id=order.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?');">
+                                            <i class="bi bi-trash"></i> ลบ
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="12" class="text-center text-muted">ไม่มีข้อมูลในคำสั่งซื้อปัจจุบันนี้</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="editOrderItemModal" tabindex="-1" aria-labelledby="editOrderItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="editOrderItemModalLabel">แก้ไขรายการคำสั่งซื้อ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" id="editOrderItemForm">
+                <div class="modal-body">
+                    <input type="hidden" name="order_id" id="edit_order_id_hidden">
+                    <input type="hidden" name="products_id" id="edit_products_id_hidden">
+                    <div class="mb-3">
+                        <label for="edit_products_name" class="form-label">ชื่อสินค้า</label>
+                        <input type="text" class="form-control" id="edit_products_name" readonly disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_quantity" class="form-label">จำนวน</label>
+                        <input type="number" class="form-control" id="edit_quantity" name="quantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_disquantity" class="form-label">ทิ้ง</label>
+                        <input type="number" class="form-control" id="edit_disquantity" name="disquantity" min="0" required>
+                    </div>
+                     <div class="mb-3">
+                        <label for="edit_barcode_id" class="form-label">บาร์โค้ด</label>
+                        <input type="text" class="form-control" id="edit_barcode_id" name="barcode_id" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="submit" class="btn btn-info">บันทึกการแก้ไข</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const productsIdInput = document.getElementById('products_id_input');
+        const datalist = document.getElementById('productsDatalist');
+        const selectedProductDetailsDisplay = document.getElementById('selected_product_details_display');
+        const addBarcodeIdHidden = document.getElementById('add_barcode_id_hidden');
+        const rawProductsDataString = document.getElementById('raw_products_data_string').value;
+        const addItemForm = document.getElementById('addItemForm');
+
+        // แปลง string ข้อมูลสินค้าที่ Flask ส่งมา ให้อยู่ในรูปแบบที่ JavaScript เข้าใจง่าย
+        const productsMapById = new Map();
+        if (rawProductsDataString) {
+            const productStrings = rawProductsDataString.split('///');
+            productStrings.forEach(prodStr => {
+                const parts = prodStr.split('|');
+                if (parts.length === 5) { // แก้ไขความยาวเป็น 5 เพราะเพิ่มราคาเข้ามา
+                    const product = {
+                        products_id: parts[0],
+                        products_name: parts[1],
+                        stock: parts[2],
+                        price: parts[3], // เพิ่มราคาเข้ามา
+                        barcode_id: parts[4] || '' // barcode_id เป็นส่วนสุดท้าย
+                    };
+                    productsMapById.set(product.products_id, product);
+
+                    const option = document.createElement('option');
+                    option.value = product.products_id;
+                    option.label = `${product.products_name} (ราคา: ${product.price}, สต็อก: ${product.stock})`; // เพิ่มราคาใน label
+                    datalist.appendChild(option);
+                }
+            });
+        }
+
+        // Function to update product details display
+        function updateProductDisplay(product) {
+            if (product) {
+                selectedProductDetailsDisplay.value = `${product.products_name} | ราคา: ${product.price} | สต็อก: ${product.stock}`; // เพิ่มราคา
+                addBarcodeIdHidden.value = product.barcode_id; // Update hidden barcode_id for Add form
+            } else {
+                selectedProductDetailsDisplay.value = 'ไม่พบสินค้า';
+                addBarcodeIdHidden.value = ''; // Clear hidden barcode_id if no product found
+            }
+        }
+
+        // --- Event Listener for Product ID Input (with Datalist) ---
+        if (productsIdInput) {
+            productsIdInput.addEventListener('input', function() {
+                const enteredProductId = this.value.trim();
+                const product = productsMapById.get(enteredProductId);
+                updateProductDisplay(product);
+
+                // *** ตรวจสอบความยาวและส่งฟอร์มอัตโนมัติ ***
+                if (enteredProductId.length === 13 && product) { // ตรวจสอบว่ามี product จริงๆ ก่อน submit
+                    productsIdInput.setCustomValidity('');
+                    addItemForm.classList.remove('was-validated');
+
+                    if (addItemForm.checkValidity()) {
+                        addItemForm.submit();
+                    } else {
+                        addItemForm.classList.add('was-validated');
+                    }
+                }
+            });
+
+            // Initial load: If pre_filled_products_id_input is set (from Flask after POST)
+            const initialEnteredProductId = productsIdInput.value.trim();
+            if (initialEnteredProductId) {
+                const product = productsMapById.get(initialEnteredProductId);
+                updateProductDisplay(product);
+            } else {
+                selectedProductDetailsDisplay.value = 'จะแสดงที่นี่หลังจากระบุรหัสสินค้า';
+            }
+
+            // ตั้งค่า focus ให้กับ input รหัสสินค้าเมื่อหน้าโหลดเสร็จ
+            productsIdInput.focus();
+        }
+
+        // --- JavaScript สำหรับ Modal แก้ไขรายการ ---
+        const editOrderItemModal = document.getElementById('editOrderItemModal');
+        editOrderItemModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const itemId = button.dataset.id;
+            const productsId = button.dataset.products_id;
+            const productsName = button.dataset.products_name;
+            const quantity = button.dataset.quantity;
+            const disquantity = button.dataset.disquantity;
+            const orderId = button.dataset.order_id;
+            const barcodeId = button.dataset.barcode_id;
+
+            const modalTitle = editOrderItemModal.querySelector('.modal-title');
+            const editForm = editOrderItemModal.querySelector('#editOrderItemForm');
+            const editProductsName = editOrderItemModal.querySelector('#edit_products_name');
+            const editQuantity = editOrderItemModal.querySelector('#edit_quantity');
+            const editDisquantity = editOrderItemModal.querySelector('#edit_disquantity');
+            const editOrderIdHidden = editOrderItemModal.querySelector('#edit_order_id_hidden');
+            const editProductsIdHidden = editOrderItemModal.querySelector('#edit_products_id_hidden');
+            const editBarcodeId = editOrderItemModal.querySelector('#edit_barcode_id');
+
+            modalTitle.textContent = `แก้ไขรายการ: ${productsName}`;
+            editProductsName.value = productsName;
+            editQuantity.value = quantity;
+            editDisquantity.value = disquantity;
+            editOrderIdHidden.value = orderId; // ตั้งค่า order_id ที่ซ่อนไว้
+            editProductsIdHidden.value = productsId; // ตั้งค่า products_id ที่ซ่อนไว้
+            editBarcodeId.value = barcodeId; // ตั้งค่า barcode_id
+
+            // ตั้งค่า action ของ form ให้ถูกต้อง
+            editForm.action = `/cart/edit/${itemId}`;
+        });
+
+
+        // Bootstrap validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+        })();
+    });
+</script>
+{% endblock %}
